@@ -51,16 +51,15 @@
 <body>
     <div id="ui">
         <h3>Controls</h3>
-        <button id="startBtn">Start</button>
-        <button id="stopBtn">Stop</button>
-        <button id="resetBtn">Reset</button>
+        <button id="toggleBtn">Stop</button>
+        <button id="resetBtn">Clear</button>
         <button id="randomizeBtn">Randomize</button>
         <br><br>
         <label for="speed">Speed (ms):</label>
-        <input type="number" id="speed" value="500" min="100" step="100">
+        <input type="number" id="speed" value="100" min="100" step="100">
         <br><br>
         <label for="cpuInterval">CPU Glider Interval (ms):</label>
-        <input type="number" id="cpuInterval" value="3000" min="1000" step="500">
+        <input type="number" id="cpuInterval" value="1000" min="1000" step="500">
         <br><br>
         <div>
             <strong>Color:</strong><br>
@@ -73,17 +72,17 @@
         <br>
         <div>
             <strong>Tool:</strong><br>
-            <label><input type="radio" name="tool" value="1x1" checked> 1x1</label><br>
+            <label><input type="radio" name="tool" value="1x1"> 1x1</label><br>
             <label><input type="radio" name="tool" value="2x2"> 2x2 Block</label><br>
             <label><input type="radio" name="tool" value="1x3"> 1x3 Blinker</label><br>
-            <label><input type="radio" name="tool" value="3x3"> 3x3 Full</label><br>
+            <label><input type="radio" name="tool" value="block"> Block</label><br>
             <label><input type="radio" name="tool" value="cross"> Cross</label><br>
             <label><input type="radio" name="tool" value="line"> Diagonal Line</label><br>
             <label><input type="radio" name="tool" value="glider-nw"> Glider NW</label><br>
             <label><input type="radio" name="tool" value="glider-ne"> Glider NE</label><br>
             <label><input type="radio" name="tool" value="glider-sw"> Glider SW</label><br>
             <label><input type="radio" name="tool" value="glider-se"> Glider SE</label><br>
-            <label><input type="radio" name="tool" value="glider-random"> Glider Random</label>
+            <label><input type="radio" name="tool" value="glider-random" checked> Glider Random</label>
         </div>
     </div>
 
@@ -92,7 +91,7 @@
     <script>
         const width = 50, height = 50;
         let grid = [];
-        let running = false;
+        let running = true;
         let interval;
         let cpuIntervalID;
 
@@ -147,7 +146,7 @@
         const toolPatterns = {
             '2x2': [[0, 0], [0, 1], [1, 0], [1, 1]],
             '1x3': [[0, 0], [0, 1], [0, 2]],
-            '3x3': [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+            'block': [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
             'cross': [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]],
             'line': [[0, 0], [1, 1], [2, 2]]
         };
@@ -232,7 +231,6 @@
         function step() {
             const newGrid = grid.map(arr => [...arr]);
 
-            // Phase 1: RPS Conflict
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const state = grid[y][x];
@@ -256,7 +254,6 @@
                 }
             }
 
-            // Phase 2: GoL
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const state = newGrid[y][x];
@@ -276,9 +273,12 @@
             drawGrid();
         }
 
-        document.getElementById('startBtn').onclick = () => {
-            if (!running) {
-                running = true;
+        document.getElementById('toggleBtn').onclick = () => {
+            running = !running;
+            document.getElementById('toggleBtn').textContent = running ? 'Stop' : 'Start';
+            clearInterval(interval);
+            clearInterval(cpuIntervalID);
+            if (running) {
                 const speed = +document.getElementById('speed').value;
                 const cpuDelay = +document.getElementById('cpuInterval').value;
                 interval = setInterval(step, speed);
@@ -286,16 +286,7 @@
             }
         };
 
-        document.getElementById('stopBtn').onclick = () => {
-            running = false;
-            clearInterval(interval);
-            clearInterval(cpuIntervalID);
-        };
-
         document.getElementById('resetBtn').onclick = () => {
-            running = false;
-            clearInterval(interval);
-            clearInterval(cpuIntervalID);
             createGrid();
         };
 
@@ -310,6 +301,7 @@
         };
 
         createGrid();
+        document.getElementById('toggleBtn').click();
     </script>
 </body>
 
