@@ -59,14 +59,21 @@
         <label for="speed">Speed (ms):</label>
         <input type="number" id="speed" value="500" min="100" step="100">
         <br><br>
-        <label for="tool">Tool:</label>
-        <select id="tool">
-            <option value="rock">Rock</option>
-            <option value="paper">Paper</option>
-            <option value="scissors">Scissors</option>
-            <option value="random">Random</option>
-            <option value="0">Eraser</option>
-        </select>
+        <div>
+            <strong>Color:</strong><br>
+            <label><input type="radio" name="color" value="rock" checked> Rock</label><br>
+            <label><input type="radio" name="color" value="paper"> Paper</label><br>
+            <label><input type="radio" name="color" value="scissors"> Scissors</label><br>
+            <label><input type="radio" name="color" value="random"> Random</label><br>
+            <label><input type="radio" name="color" value="0"> Eraser</label>
+        </div>
+        <br>
+        <div>
+            <strong>Tool:</strong><br>
+            <label><input type="radio" name="tool" value="1x1" checked> 1x1</label><br>
+            <label><input type="radio" name="tool" value="glider"> Glider</label>
+            <!-- Add more tools as needed -->
+        </div>
     </div>
 
     <div id="grid"></div>
@@ -95,13 +102,39 @@
             drawGrid();
         }
 
+        function getSelectedColor() {
+            return document.querySelector('input[name="color"]:checked').value;
+        }
+
+        function getSelectedTool() {
+            return document.querySelector('input[name="tool"]:checked').value;
+        }
+
         function toggleCell(x, y) {
-            const tool = document.getElementById('tool').value;
-            if (tool === 'random') {
-                const options = ['rock', 'paper', 'scissors'];
-                grid[y][x] = options[Math.floor(Math.random() * options.length)];
-            } else {
-                grid[y][x] = tool === '0' ? 0 : tool;
+            const color = getSelectedColor();
+            const tool = getSelectedTool();
+            if (tool === '1x1') {
+                if (color === 'random') {
+                    const options = ['rock', 'paper', 'scissors'];
+                    grid[y][x] = options[Math.floor(Math.random() * options.length)];
+                } else {
+                    grid[y][x] = color === '0' ? 0 : color;
+                }
+            } else if (tool === 'glider') {
+                const pattern = [
+                    [0, 1], [1, 2], [2, 0], [2, 1], [2, 2]
+                ];
+                for (const [dy, dx] of pattern) {
+                    const ny = y + dy, nx = x + dx;
+                    if (ny < height && nx < width) {
+                        if (color === 'random') {
+                            const options = ['rock', 'paper', 'scissors'];
+                            grid[ny][nx] = options[Math.floor(Math.random() * options.length)];
+                        } else {
+                            grid[ny][nx] = color === '0' ? 0 : color;
+                        }
+                    }
+                }
             }
             drawGrid();
         }
