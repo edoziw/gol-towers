@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RPS Game of Life</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            margin: 0;
+        }
+
+        #ui {
+            width: 200px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-right: 1px solid #ccc;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(50, 12px);
+            grid-template-rows: repeat(50, 12px);
+            gap: 1px;
+            margin: 10px;
+        }
+
+        .cell {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .rock {
+            background: red;
+        }
+
+        .paper {
+            background: green;
+        }
+
+        .scissors {
+            background: blue;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ui">
+        <h3>Controls</h3>
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+        <button id="resetBtn">Reset</button>
+        <br><br>
+        <label for="speed">Speed (ms):</label>
+        <input type="number" id="speed" value="500" min="100" step="100">
+        <br><br>
+        <label for="tool">Tool:</label>
+        <select id="tool">
+            <option value="rock">Rock</option>
+            <option value="paper">Paper</option>
+            <option value="scissors">Scissors</option>
+            <option value="0">Eraser</option>
+        </select>
+    </div>
+
+    <div id="grid"></div>
+
+    <script>
+        const width = 50, height = 50;
+        let grid = [];
+        let running = false;
+        let interval;
+
+        const gridContainer = document.getElementById('grid');
+
+        function createGrid() {
+            grid = Array.from({ length: height }, () => Array(width).fill(0));
+            gridContainer.innerHTML = '';
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.addEventListener('click', () => toggleCell(x, y));
+                    gridContainer.appendChild(cell);
+                }
+            }
+            drawGrid();
+        }
+
+        function toggleCell(x, y) {
+            const tool = document.getElementById('tool').value;
+            grid[y][x] = tool === '0' ? 0 : tool;
+            drawGrid();
+        }
+
+        function drawGrid() {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = y * width + x;
+                    const cell = gridContainer.children[idx];
+                    cell.className = 'cell';
+                    if (grid[y][x]) cell.classList.add(grid[y][x]);
+                }
+            }
+        }
+
+        function getNeighbors(x, y) {
+            const deltas = [-1, 0, 1];
+            const neighbors = [];
+            for (let dx of deltas) {
+                for (let dy of deltas) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = x + dx, ny = y + dy;
+                    if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                        neighbors.push(grid[ny][nx]);
+                    }
+                }
+            }
+            return neighbors;
+        }
+
+        function rpsWinner(a, b) {
+            if (a === b) return null;
+            const beats = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+            return beats[a] === b ? a : b;
+        }
+
+        function step() {
+            const newGrid = grid.map(arr => [...arr]);
+
+            // Phase 1: RPS Conflict
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const state = grid[y][x];
+                    if (!state) continue;
+                    const neighbors = getNeighbors(x, y).filter(n => n);
+                    const counts = { rock: 0, paper: 0, scissors: 0 };
+                    for (const n of neighbors) counts[n]++;
+                    const entries = Object.entries(counts).filter(([k, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+                    if (entries.length >= 2 && entries[0][1] !== entries[1][1]) {
+                        const winner = rpsWinner(entries[0][0], entries[1][0]);
+                        const loser = winner === entries[0][0] ? entries[1][0] : entries[0][0];
+                        for (let dx = -1; dx <= 1; dx++) {
+                            for (let dy = -1; dy <= 1; dy++) {
+                                const nx = x + dx, ny = y + dy;
+                                if (nx >= 0 && ny >= 0 && nx < width && ny < height && grid[ny][nx] === loser) {
+                                    newGrid[ny][nx] = winner;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Phase 2: GoL
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const state = newGrid[y][x];
+                    const neighbors = getNeighbors(x, y);
+                    const alive = neighbors.filter(n => n !== 0).length;
+                    if (state && (alive < 2 || alive > 3)) newGrid[y][x] = 0;
+                    else if (!state && alive === 3) {
+                        const types = { rock: 0, paper: 0, scissors: 0 };
+                        for (const n of neighbors) if (n) types[n]++;
+                        const entries = Object.entries(types).filter(([_, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+                        newGrid[y][x] = entries.length > 1 && entries[0][1] === entries[1][1] ? entries[Math.floor(Math.random() * 2)][0] : entries[0][0];
+                    }
+                }
+            }
+
+            grid = newGrid;
+            drawGrid();
+        }
+
+        document.getElementById('startBtn').onclick = () => {
+            if (!running) {
+                running = true;
+                const speed = +document.getElementById('speed').value;
+                interval = setInterval(step, speed);
+            }
+        };
+
+        document.getElementById('stopBtn').onclick = () => {
+            running = false;
+            clearInterval(interval);
+        };
+
+        document.getElementById('resetBtn').onclick = () => {
+            running = false;
+            clearInterval(interval);
+            createGrid();
+        };
+
+        createGrid();
+    </script>
+</body>
+
+</html>
