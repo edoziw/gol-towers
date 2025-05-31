@@ -20,17 +20,17 @@
 
         #grid {
             display: grid;
-            grid-template-columns: repeat(50, 12px);
-            grid-template-rows: repeat(50, 12px);
+            grid-template-columns: repeat(72, 8px);
+            grid-template-rows: repeat(72, 8px);
             gap: 1px;
             margin: 10px;
-            transform: rotate(45deg) scale(0.7);
+            transform: rotate(45deg) scale(0.6);
             transform-origin: center;
         }
 
         .cell {
-            width: 12px;
-            height: 12px;
+            width: 8px;
+            height: 8px;
             background: white;
             border: 1px solid #eee;
             cursor: pointer;
@@ -91,7 +91,7 @@
     <div id="grid"></div>
 
     <script>
-        const width = 50, height = 50;
+        const width = 72, height = 72;
         let grid = [];
         let running = true;
         let interval;
