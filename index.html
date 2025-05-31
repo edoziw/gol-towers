@@ -79,10 +79,10 @@
             <label><input type="radio" name="tool" value="3x3"> 3x3 Full</label><br>
             <label><input type="radio" name="tool" value="cross"> Cross</label><br>
             <label><input type="radio" name="tool" value="line"> Diagonal Line</label><br>
-            <label><input type="radio" name="tool" value="glider-sw"> Glider SW</label><br>
-            <label><input type="radio" name="tool" value="glider-se"> Glider SE</label><br>
             <label><input type="radio" name="tool" value="glider-nw"> Glider NW</label><br>
             <label><input type="radio" name="tool" value="glider-ne"> Glider NE</label><br>
+            <label><input type="radio" name="tool" value="glider-sw"> Glider SW</label><br>
+            <label><input type="radio" name="tool" value="glider-se"> Glider SE</label><br>
             <label><input type="radio" name="tool" value="glider-random"> Glider Random</label>
         </div>
     </div>
@@ -122,11 +122,26 @@
             return document.querySelector('input[name="tool"]:checked').value;
         }
 
+        const GLIDER_NE = [[0, 1], [0, 2], [1, 0], [1, 2], [2, 2]];
+
+        function rotate(angle, pattern) {
+            switch (angle) {
+                case 90:
+                    return pattern.map(([y, x]) => [x, 2 - y]);
+                case 180:
+                    return pattern.map(([y, x]) => [2 - y, 2 - x]);
+                case 270:
+                    return pattern.map(([y, x]) => [2 - x, y]);
+                default:
+                    return pattern;
+            }
+        }
+
         const gliderPatterns = {
-            'glider-sw': [[0, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
-            'glider-se': [[0, 1], [1, 0], [2, 1], [2, 2], [2, 0]],
-            'glider-nw': [[0, 0], [0, 2], [1, 1], [1, 2], [2, 1]],
-            'glider-ne': [[0, 1], [0, 2], [1, 0], [1, 2], [2, 2]]
+            'glider-ne': rotate(0, GLIDER_NE),
+            'glider-se': rotate(90, GLIDER_NE),
+            'glider-sw': rotate(180, GLIDER_NE),
+            'glider-nw': rotate(270, GLIDER_NE)
         };
 
         const toolPatterns = {
