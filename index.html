@@ -71,8 +71,11 @@
         <div>
             <strong>Tool:</strong><br>
             <label><input type="radio" name="tool" value="1x1" checked> 1x1</label><br>
-            <label><input type="radio" name="tool" value="glider"> Glider</label>
-            <!-- Add more tools as needed -->
+            <label><input type="radio" name="tool" value="glider-nw"> Glider NW</label><br>
+            <label><input type="radio" name="tool" value="glider-ne"> Glider NE</label><br>
+            <label><input type="radio" name="tool" value="glider-sw"> Glider SW</label><br>
+            <label><input type="radio" name="tool" value="glider-se"> Glider SE</label><br>
+            <label><input type="radio" name="tool" value="glider-random"> Glider Random</label>
         </div>
     </div>
 
@@ -110,32 +113,43 @@
             return document.querySelector('input[name="tool"]:checked').value;
         }
 
+        const gliderPatterns = {
+            'glider-nw': [[0, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+            'glider-ne': [[0, 1], [1, 0], [2, 1], [2, 2], [2, 0]],
+            'glider-sw': [[0, 0], [0, 2], [1, 1], [1, 2], [2, 1]],
+            'glider-se': [[0, 1], [0, 2], [1, 0], [1, 2], [2, 2]]
+        };
+
         function toggleCell(x, y) {
             const color = getSelectedColor();
             const tool = getSelectedTool();
-            if (tool === '1x1') {
-                if (color === 'random') {
-                    const options = ['rock', 'paper', 'scissors'];
-                    grid[y][x] = options[Math.floor(Math.random() * options.length)];
-                } else {
-                    grid[y][x] = color === '0' ? 0 : color;
-                }
-            } else if (tool === 'glider') {
-                const pattern = [
-                    [0, 1], [1, 2], [2, 0], [2, 1], [2, 2]
-                ];
-                for (const [dy, dx] of pattern) {
-                    const ny = y + dy, nx = x + dx;
-                    if (ny < height && nx < width) {
-                        if (color === 'random') {
-                            const options = ['rock', 'paper', 'scissors'];
-                            grid[ny][nx] = options[Math.floor(Math.random() * options.length)];
-                        } else {
-                            grid[ny][nx] = color === '0' ? 0 : color;
-                        }
+
+            const applyState = (nx, ny) => {
+                if (ny < height && nx < width) {
+                    if (color === 'random') {
+                        const options = ['rock', 'paper', 'scissors'];
+                        grid[ny][nx] = options[Math.floor(Math.random() * options.length)];
+                    } else {
+                        grid[ny][nx] = color === '0' ? 0 : color;
                     }
                 }
+            };
+
+            if (tool === '1x1') {
+                applyState(x, y);
+            } else if (tool.startsWith('glider')) {
+                let pattern;
+                if (tool === 'glider-random') {
+                    const keys = Object.keys(gliderPatterns);
+                    pattern = gliderPatterns[keys[Math.floor(Math.random() * keys.length)]];
+                } else {
+                    pattern = gliderPatterns[tool];
+                }
+                for (const [dy, dx] of pattern) {
+                    applyState(x + dx, y + dy);
+                }
             }
+
             drawGrid();
         }
 
