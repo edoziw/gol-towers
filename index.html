@@ -73,12 +73,17 @@
         <br>
         <div>
             <strong>Tool:</strong><br>
+            <label><input type="radio" name="tool" value="1x1" checked> 1x1</label><br>
+            <label><input type="radio" name="tool" value="2x2"> 2x2 Block</label><br>
+            <label><input type="radio" name="tool" value="1x3"> 1x3 Blinker</label><br>
+            <label><input type="radio" name="tool" value="3x3"> 3x3 Full</label><br>
+            <label><input type="radio" name="tool" value="cross"> Cross</label><br>
+            <label><input type="radio" name="tool" value="line"> Diagonal Line</label><br>
             <label><input type="radio" name="tool" value="glider-sw"> Glider SW</label><br>
             <label><input type="radio" name="tool" value="glider-se"> Glider SE</label><br>
             <label><input type="radio" name="tool" value="glider-nw"> Glider NW</label><br>
             <label><input type="radio" name="tool" value="glider-ne"> Glider NE</label><br>
-            <label><input type="radio" name="tool" value="glider-random"> Glider Random</label><br>
-            <label><input type="radio" name="tool" value="1x1" checked> 1x1</label>
+            <label><input type="radio" name="tool" value="glider-random"> Glider Random</label>
         </div>
     </div>
 
@@ -118,10 +123,18 @@
         }
 
         const gliderPatterns = {
-            'glider-nw': [[0, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
-            'glider-ne': [[0, 1], [1, 0], [2, 1], [2, 2], [2, 0]],
-            'glider-sw': [[0, 0], [0, 2], [1, 1], [1, 2], [2, 1]],
-            'glider-se': [[0, 1], [0, 2], [1, 0], [1, 2], [2, 2]]
+            'glider-sw': [[0, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+            'glider-se': [[0, 1], [1, 0], [2, 1], [2, 2], [2, 0]],
+            'glider-nw': [[0, 0], [0, 2], [1, 1], [1, 2], [2, 1]],
+            'glider-ne': [[0, 1], [0, 2], [1, 0], [1, 2], [2, 2]]
+        };
+
+        const toolPatterns = {
+            '2x2': [[0, 0], [0, 1], [1, 0], [1, 1]],
+            '1x3': [[0, 0], [0, 1], [0, 2]],
+            '3x3': [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+            'cross': [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]],
+            'line': [[0, 0], [1, 1], [2, 2]]
         };
 
         function toggleCell(x, y, overrideColor = null, overrideTool = null) {
@@ -150,6 +163,10 @@
                     pattern = gliderPatterns[tool];
                 }
                 for (const [dy, dx] of pattern) {
+                    applyState(x + dx, y + dy);
+                }
+            } else if (toolPatterns[tool]) {
+                for (const [dy, dx] of toolPatterns[tool]) {
                     applyState(x + dx, y + dy);
                 }
             }
