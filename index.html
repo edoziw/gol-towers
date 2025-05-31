@@ -54,6 +54,7 @@
         <button id="startBtn">Start</button>
         <button id="stopBtn">Stop</button>
         <button id="resetBtn">Reset</button>
+        <button id="randomizeBtn">Randomize</button>
         <br><br>
         <label for="speed">Speed (ms):</label>
         <input type="number" id="speed" value="500" min="100" step="100">
@@ -63,6 +64,7 @@
             <option value="rock">Rock</option>
             <option value="paper">Paper</option>
             <option value="scissors">Scissors</option>
+            <option value="random">Random</option>
             <option value="0">Eraser</option>
         </select>
     </div>
@@ -95,7 +97,12 @@
 
         function toggleCell(x, y) {
             const tool = document.getElementById('tool').value;
-            grid[y][x] = tool === '0' ? 0 : tool;
+            if (tool === 'random') {
+                const options = ['rock', 'paper', 'scissors'];
+                grid[y][x] = options[Math.floor(Math.random() * options.length)];
+            } else {
+                grid[y][x] = tool === '0' ? 0 : tool;
+            }
             drawGrid();
         }
 
@@ -195,6 +202,16 @@
             running = false;
             clearInterval(interval);
             createGrid();
+        };
+
+        document.getElementById('randomizeBtn').onclick = () => {
+            const options = ['rock', 'paper', 'scissors', 0];
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    grid[y][x] = options[Math.floor(Math.random() * options.length)];
+                }
+            }
+            drawGrid();
         };
 
         createGrid();
