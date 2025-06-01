@@ -1,5 +1,6 @@
 use bevy::{prelude::*, time::Fixed};
 use rand::{rng, Rng};
+use std::collections::HashMap;
 
 const GRID_WIDTH: usize = 64;
 const GRID_HEIGHT: usize = 64;
@@ -157,42 +158,67 @@ fn setup_ui(mut commands: Commands) {
             ..default()
         },
         Name::new("RootUI"),
-        children![(
-            Button,
-            PlayingButton,
-            Node {
-                width: Val::Px(150.0),
-                height: Val::Px(50.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                margin: UiRect::all(Val::Px(8.0)),
-                ..default()
-            },
-            Name::new("PlayPauseButton"),
-            BackgroundColor(PLAY_COLOR), // dark red
-            children![(
-                Text::new("Play"),
-                TextFont {
-                    font_size: 24.0,
+        children![
+            (
+                Button,
+                PlayingButton,
+                Node {
+                    width: Val::Px(150.0),
+                    height: Val::Px(50.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(8.0)),
                     ..default()
                 },
-                TextColor(Color::WHITE),
-                TextLayout::default(),
-            )]
-        )],
+                Name::new("PlayPauseButton"),
+                BackgroundColor(PLAY_COLOR), // dark red
+                children![(
+                    Text::new("Play"),
+                    TextFont {
+                        font_size: 24.0,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                    TextLayout::default(),
+                )]
+            ),
+            (
+                Button,
+                PlayingButton,
+                Node {
+                    width: Val::Px(150.0),
+                    height: Val::Px(50.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(8.0)),
+                    ..default()
+                },
+                Name::new("ClearButton"),
+                BackgroundColor(PLAY_COLOR), // dark red
+                children![(
+                    Text::new("Clear"),
+                    TextFont {
+                        font_size: 24.0,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                    TextLayout::default(),
+                )]
+            )
+        ],
     ));
 }
 
 fn handle_play_button(
     mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &Children),
-        (Changed<Interaction>, With<Button>),
+        (&Interaction, &mut BackgroundColor, &Children, &Name),
+        (Changed<Interaction>, With<Button>, With<Name>),
     >,
     mut text_query: Query<&mut Text>,
     mut playing: ResMut<Playing>,
 ) {
-    for (interaction, mut bg_color, children) in &mut interaction_query {
-        if *interaction == Interaction::Pressed {
+    for (interaction, mut bg_color, children, name) in &mut interaction_query {
+        if *interaction == Interaction::Pressed && name.as_str() == "PlayPauseButton" {
             playing.0 = !playing.0;
             let label = if playing.0 { "Pause" } else { "Play" };
             for child in children.iter() {
@@ -209,8 +235,119 @@ fn handle_play_button(
     }
 }
 
+fn handle_clear_button(
+    query: Query<(&Interaction, &Name), (Changed<Interaction>, With<Button>)>,
+    mut cell_query: Query<(&mut Sprite, &mut Cell)>,
+) {
+    for (interaction, name) in query.iter() {
+        if *interaction == Interaction::Pressed && name.as_str() == "ClearButton" {
+            for (mut sprite, mut cell) in &mut cell_query {
+                cell.state = CellState::Dead;
+                sprite.color = Color::WHITE;
+            }
+        }
+    }
+}
+
 fn is_playing(playing: Res<Playing>) -> bool {
     playing.0
+}
+#[derive(Resource, Default)]
+struct DragStart(Option<(Vec2, f64)>); // Store start position and time of drag
+
+#[derive(Resource)]
+struct SavedPatterns(HashMap<String, Vec<(i32, i32)>>);
+
+impl Default for SavedPatterns {
+    fn default() -> Self {
+        SavedPatterns(HashMap::new())
+    }
+}
+
+#[derive(Resource)]
+struct SelectedPattern(String); // E.g., "glider", "2x2", or user-named
+
+fn drag_start(
+    buttons: Res<ButtonInput<MouseButton>>,
+    windows: Query<&Window>,
+    camera_q: Query<(&Camera, &GlobalTransform)>,
+    time: Res<Time<Fixed>>,
+    mut drag_start: ResMut<DragStart>,
+) {
+    if !buttons.just_pressed(MouseButton::Left) {
+        return;
+    }
+    let Ok((camera, transform)) = camera_q.single() else {
+        return;
+    };
+    let Ok(win) = windows.single() else {
+        return;
+    };
+    let Some(pos) = win.cursor_position() else {
+        return;
+    };
+    let Ok(world) = camera.viewport_to_world_2d(transform, pos) else {
+        return;
+    };
+    drag_start.0 = Some((world, time.elapsed_secs_f64()));
+}
+
+fn drag_end(
+    buttons: Res<ButtonInput<MouseButton>>,
+    windows: Query<&Window>,
+    camera_q: Query<(&Camera, &GlobalTransform)>,
+    time: Res<Time<Fixed>>,
+    drag_start: Res<DragStart>,
+    cells: Query<(&Cell, &Transform)>,
+    mut saved: ResMut<SavedPatterns>,
+) {
+    if !buttons.just_released(MouseButton::Left) {
+        return;
+    }
+    let Some((start_pos, start_time)) = drag_start.0 else {
+        return;
+    };
+
+    let duration = time.elapsed_secs_f64() - start_time;
+    if duration < 1.0 {
+        return;
+    }
+
+    let Ok((camera, transform)) = camera_q.single() else {
+        return;
+    };
+    let Ok(win) = windows.single() else {
+        return;
+    };
+    let Some(pos) = win.cursor_position() else {
+        return;
+    };
+    let Ok(end) = camera.viewport_to_world_2d(transform, pos) else {
+        return;
+    };
+    let min = start_pos.min(end);
+    let max = start_pos.max(end);
+
+    let mut selected = vec![];
+    for (cell, trans) in &cells {
+        let world_pos = trans.translation.truncate();
+        if world_pos.x >= min.x
+            && world_pos.x <= max.x
+            && world_pos.y >= min.y
+            && world_pos.y <= max.y
+            && cell.state == CellState::Alive
+        {
+            let rel_x = (world_pos.x - min.x).round() as i32 / CELL_SIZE as i32;
+            let rel_y = (world_pos.y - min.y).round() as i32 / CELL_SIZE as i32;
+            selected.push((rel_x, rel_y));
+        }
+    }
+
+    // For now, use a placeholder name; later prompt via UI
+    let name = format!("Pattern{}", saved.0.len() + 1);
+    saved.0.insert(name.clone(), selected.clone());
+
+    println!("Saved pattern '{name}': {:?}", selected);
 }
 
 fn main() {
@@ -227,8 +364,13 @@ fn main() {
         .insert_resource(Playing(false))
         .add_systems(Startup, setup_ui)
         .insert_resource(Time::<Fixed>::from_seconds(0.5))
+        .insert_resource(DragStart::default())
+        .insert_resource(SavedPatterns::default())
+        .insert_resource(SelectedPattern("1x1".to_string()))
         .add_systems(FixedUpdate, game_of_life_step.run_if(is_playing))
         .add_systems(Update, handle_play_button)
+        .add_systems(Update, handle_clear_button)
         .add_systems(Update, click_to_toggle_cell)
+        .add_systems(Update, (drag_start, drag_end))
         .run();
 }
