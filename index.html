@@ -16,8 +16,8 @@
             padding: 10px;
             background: #f0f0f0;
             border-right: 1px solid #ccc;
-            offz-index: 1;
-            offposition: relative;
+            z-index: 1;
+            position: relative;
         }
 
         #grid {
@@ -28,8 +28,8 @@
             margin: 10px;
             transform: rotate(45deg) scale(1.3);
             transform-origin: center;
-            offz-index: 0;
-            offposition: relative;
+            z-index: 0;
+            position: relative;
         }
 
         .cell {
@@ -46,15 +46,15 @@
         }
 
         .rock {
-            background: red;
+            background: rgb(29, 29, 27);
         }
 
         .paper {
-            background: green;
+            background: rgb(141, 134, 93);
         }
 
         .scissors {
-            background: blue;
+            background: rgb(161, 11, 11);
         }
     </style>
 </head>
@@ -116,14 +116,14 @@
                 const dy = Math.abs(y - halfHeight);
                 for (let x = 0; x < width; x++) {
                     const cell = document.createElement('div');
-                    const vissible = (dy + Math.abs(x - halfWidth)) <= halfWidth;
+                    const vissible = (dy + Math.abs(x - halfWidth)) <= (halfWidth + halfHeight) / 2;
                     //grid[x][y].vissible = vissible;
-                    cell.className = 'cell';
                     cell.dataset.hidden = !vissible;
                     cell.dataset.x = x;
                     cell.dataset.y = y;
                     if (vissible) {
                         cell.addEventListener('click', () => toggleCell(x, y));
+                        cell.className = 'cell';
                     } else {
                         cell.className = 'hidden';
                     }
@@ -220,10 +220,9 @@
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const cell = getCell(x, y);
-                    if (cell.dataset.hidden) {
+                    if (cell.dataset.hidden === 'true') {
                         continue;
                     }
-                    cell.className = 'cell';
                     if (grid[y][x]) cell.classList.add(grid[y][x]);
                 }
             }
@@ -236,7 +235,7 @@
 
         function isCellVisible(x, y) {
             const cell = getCell(x, y);
-            return cell && !cell.dataset.hidden;
+            return cell && cell.dataset.hidden !== 'true';
         }
 
         function getNeighbors(x, y) {
@@ -267,6 +266,7 @@
                 for (let x = 0; x < width; x++) {
                     if (!isCellVisible(x, y)) continue;
                     const state = grid[y][x];
+                    if (!state) continue;
                     const neighbors = getNeighbors(x, y).filter(n => n);
                     const counts = { rock: 0, paper: 0, scissors: 0 };
                     for (const n of neighbors) counts[n]++;
