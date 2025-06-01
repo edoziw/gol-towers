@@ -16,6 +16,8 @@
             padding: 10px;
             background: #f0f0f0;
             border-right: 1px solid #ccc;
+            offz-index: 1;
+            offposition: relative;
         }
 
         #grid {
@@ -26,6 +28,8 @@
             margin: 10px;
             transform: rotate(45deg) scale(1.3);
             transform-origin: center;
+            offz-index: 0;
+            offposition: relative;
         }
 
         .cell {
@@ -115,13 +119,14 @@
                     const vissible = (dy + Math.abs(x - halfWidth)) <= halfWidth;
                     //grid[x][y].vissible = vissible;
                     cell.className = 'cell';
-                    if (!vissible) {
-                        cell.dataset.hidden = true;
-                        cell.className = 'hidden';
-                    }
+                    cell.dataset.hidden = !vissible;
                     cell.dataset.x = x;
                     cell.dataset.y = y;
-                    cell.addEventListener('click', () => toggleCell(x, y));
+                    if (vissible) {
+                        cell.addEventListener('click', () => toggleCell(x, y));
+                    } else {
+                        cell.className = 'hidden';
+                    }
                     gridContainer.appendChild(cell);
                 }
             }
