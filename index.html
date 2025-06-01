@@ -21,17 +21,13 @@
         }
 
         #grid-wrapper {
+            aspect-ratio: 1;
+            width: 100%;
+            max-width: calc(100vh - 20px);
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            margin: 10px;
-            position: relative;
-            height: calc(72 * 12px + 71 * 1px);
-            /* rows * cell height + gaps */
-            width: calc(72 * 12px + 71 * 1px);
-            /* columns * cell width + gaps */
         }
 
         #grid {
