@@ -4,3 +4,5 @@
 - tower defense protect mana/gold
 - towers in bottom, or center?
 - cpu sees your gold and trys to send gliders towards it, based on the alive colors in front of it.
+- copy pattern
+- 45deg vs 0deg mode
