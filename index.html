@@ -220,9 +220,13 @@
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const cell = getCell(x, y);
-                    if (cell.dataset.hidden === 'true') {
-                        continue;
-                    }
+
+                    // Always reset classes
+                    cell.className = cell.dataset.hidden === 'true' ? 'hidden' : 'cell';
+
+                    //if (cell.dataset.hidden === 'true') {
+                    //    continue;
+                    //}
                     if (grid[y][x]) cell.classList.add(grid[y][x]);
                 }
             }
@@ -245,7 +249,8 @@
                 for (let dy of deltas) {
                     if (dx === 0 && dy === 0) continue;
                     const nx = x + dx, ny = y + dy;
-                    if (isCellVisible(nx, ny)) {
+                    if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                        //if (isCellVisible(nx, ny)) {
                         neighbors.push(grid[ny][nx]);
                     }
                 }
@@ -262,9 +267,10 @@
         function step() {
             const newGrid = grid.map(arr => [...arr]);
 
+            // Phase 1: RPS Conflict
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    if (!isCellVisible(x, y)) continue;
+                    //if (!isCellVisible(x, y)) continue;
                     const state = grid[y][x];
                     if (!state) continue;
                     const neighbors = getNeighbors(x, y).filter(n => n);
@@ -286,9 +292,10 @@
                 }
             }
 
+            // Phase 2: GoL
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    if (!isCellVisible(x, y)) continue;
+                    //if (!isCellVisible(x, y)) continue;
                     const state = newGrid[y][x];
                     const neighbors = getNeighbors(x, y);
                     const alive = neighbors.filter(n => n !== 0).length;
@@ -327,7 +334,7 @@
             const options = ['rock', 'paper', 'scissors', 0];
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    if (!isCellVisible(x, y)) continue;
+                    //if (!isCellVisible(x, y)) continue;
                     grid[y][x] = options[Math.floor(Math.random() * options.length)];
                 }
             }
