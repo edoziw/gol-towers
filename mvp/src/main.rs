@@ -1,12 +1,9 @@
-// GOL MVP in Bevy
-use bevy::prelude::*;
-use rand::prelude::*;
-use rand::rng;
+use bevy::{color::palettes::basic::*, prelude::*, time::Fixed};
+use rand::{rng, Rng};
 
 const GRID_WIDTH: usize = 64;
 const GRID_HEIGHT: usize = 64;
 const CELL_SIZE: f32 = 10.0;
-const TIME_STEP: f32 = 0.2; // seconds
 
 #[derive(Component, Clone, Copy, PartialEq)]
 enum CellState {
@@ -21,8 +18,8 @@ struct Cell {
     state: CellState,
 }
 
-#[derive(Resource, Deref, DerefMut)]
-struct TimeAccumulator(f32);
+#[derive(Resource)]
+struct Playing(bool);
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
@@ -53,63 +50,161 @@ fn setup(mut commands: Commands) {
                     (y as f32 - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
                     0.0,
                 ),
-                children![Cell { x, y, state }],
+                Cell { x, y, state },
             ));
         }
     }
 }
 
-fn update_life(
-    mut query: Query<(&mut Sprite, &mut Cell)>,
-    mut accumulator: ResMut<TimeAccumulator>,
-    time: Res<Time>,
-) {
-    accumulator.0 += time.delta().as_secs_f32();
-    if accumulator.0 < TIME_STEP {
-        return;
+fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
+    let mut grid = vec![vec![CellState::Dead; GRID_WIDTH]; GRID_HEIGHT];
+
+    // Copy current state
+    for cell in query.iter() {
+        grid[cell.1.y][cell.1.x] = cell.1.state;
     }
-    accumulator.0 = 0.0;
 
-    let grid = query
-        .iter()
-        .map(|(_, cell)| ((cell.x, cell.y), cell.state))
-        .collect::<std::collections::HashMap<_, _>>();
-
-    for (mut sprite, mut cell) in &mut query {
+    for (mut sprite, mut cell) in query.iter_mut() {
         let mut alive_neighbors = 0;
-
-        for dy in [-1isize, 0, 1] {
-            for dx in [-1isize, 0, 1] {
+        for dy in -1i32..=1 {
+            for dx in -1i32..=1 {
                 if dx == 0 && dy == 0 {
                     continue;
                 }
-                let nx = cell.x as isize + dx;
-                let ny = cell.y as isize + dy;
-                if nx >= 0 && ny >= 0 {
-                    if let Some(CellState::Alive) = grid.get(&(nx as usize, ny as usize)) {
+                let nx = cell.x as i32 + dx;
+                let ny = cell.y as i32 + dy;
+                if nx >= 0 && ny >= 0 && nx < GRID_WIDTH as i32 && ny < GRID_HEIGHT as i32 {
+                    if grid[ny as usize][nx as usize] == CellState::Alive {
                         alive_neighbors += 1;
                     }
                 }
             }
         }
 
-        let new_state = match (cell.state, alive_neighbors) {
-            (CellState::Alive, 2 | 3) => CellState::Alive,
+        let next_state = match (cell.state, alive_neighbors) {
+            (CellState::Alive, 2..=3) => CellState::Alive,
             (CellState::Dead, 3) => CellState::Alive,
             _ => CellState::Dead,
         };
 
-        cell.state = new_state;
-        sprite.color = match new_state {
-            CellState::Alive => Color::BLACK,
-            CellState::Dead => Color::WHITE,
-        };
+        if next_state != cell.state {
+            cell.state = next_state;
+            sprite.color = match next_state {
+                CellState::Alive => Color::BLACK,
+                CellState::Dead => Color::WHITE,
+            };
+        }
     }
+}
+
+#[derive(Component)]
+struct PlayingButton;
+
+#[derive(Resource, Default)]
+struct SimulationRunning(bool);
+
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+
+fn toggle_button_system(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor, &Children),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut text_query: Query<&mut Text>,
+    mut state: ResMut<SimulationRunning>,
+) {
+    for (interaction, mut color, children) in &mut interaction_query {
+        let mut text = text_query.get_mut(children[0]).unwrap();
+        match *interaction {
+            Interaction::Pressed => {
+                state.0 = !state.0;
+                text.0 = if state.0 {
+                    "Pause".to_string()
+                } else {
+                    "Play".to_string()
+                };
+                *color = PRESSED_BUTTON.into();
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
+}
+
+fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Start,
+            ..default()
+        },
+        Name::new("RootUI"),
+        children![(
+            Button,
+            Node {
+                width: Val::Px(150.0),
+                height: Val::Px(50.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                margin: UiRect::all(Val::Px(8.0)),
+                ..default()
+            },
+            Name::new("PlayPauseButton"),
+            BackgroundColor(NORMAL_BUTTON),
+            children![(
+                Text::new("Pause"),
+                TextFont {
+                    //font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                    font_size: 24.0,
+                    ..default()
+                },
+                TextColor(Color::WHITE),
+                TextLayout::default()
+            )]
+        )],
+    ));
+}
+
+fn toggle_play_button(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor, &Children),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut text_query: Query<&mut Text>,
+    mut playing: ResMut<Playing>,
+) {
+    for (interaction, mut bg_color, children) in &mut interaction_query {
+        if *interaction == Interaction::Pressed {
+            playing.0 = !playing.0;
+            let label = if playing.0 { "Pause" } else { "Play" };
+            for child in children.iter() {
+                if let Ok(mut text) = text_query.get_mut(child) {
+                    text.0 = label.to_string();
+                }
+            }
+            *bg_color = if playing.0 {
+                BackgroundColor(Color::srgb(0.0, 0.5, 0.0)) // dark green
+            } else {
+                BackgroundColor(Color::srgb(0.5, 0.0, 0.0)) // dark red
+            };
+        }
+    }
+}
+
+fn is_playing(playing: Res<Playing>) -> bool {
+    playing.0
 }
 
 fn main() {
     App::new()
-        .insert_resource(TimeAccumulator(0.0))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "GOL MVP".to_string(),
@@ -119,6 +214,10 @@ fn main() {
             ..default()
         }))
         .add_systems(Startup, setup)
-        .add_systems(Update, update_life)
+        .insert_resource(Playing(false))
+        .add_systems(Startup, setup_ui)
+        .insert_resource(Time::<Fixed>::from_seconds(0.5))
+        .add_systems(FixedUpdate, game_of_life_step.run_if(is_playing))
+        .add_systems(Update, toggle_play_button)
         .run();
 }
