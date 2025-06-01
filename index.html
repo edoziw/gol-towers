@@ -77,10 +77,15 @@
         <button id="randomizeBtn">Randomize</button>
         <br><br>
         <label for="speed">Speed (ms):</label>
-        <input type="number" id="speed" value="100" min="100" step="100">
+        <input type="number" id="speed" value="100" min="50" step="100">
         <br><br>
+        <label>
+            <input type="checkbox" id="cpuEnabled" checked>
+            Enable CPU
+        </label>
+        <br>
         <label for="cpuInterval">CPU Glider Interval (ms):</label>
-        <input type="number" id="cpuInterval" value="1000" min="1000" step="500">
+        <input type="number" id="cpuInterval" value="1000" min="100" step="300">
         <br><br>
         <div>
             <strong>Color:</strong><br>
@@ -128,12 +133,12 @@
                 const dy = Math.abs(y - halfHeight);
                 for (let x = 0; x < width; x++) {
                     const cell = document.createElement('div');
-                    const vissible = (dy + Math.abs(x - halfWidth)) <= (halfWidth + halfHeight) / 2;
-                    //grid[x][y].vissible = vissible;
-                    cell.dataset.hidden = !vissible;
+                    const visible = (dy + Math.abs(x - halfWidth)) <= (halfWidth + halfHeight) / 2;
+                    //grid[x][y].visible = visible;
+                    cell.dataset.hidden = !visible;
                     cell.dataset.x = x;
                     cell.dataset.y = y;
-                    if (vissible) {
+                    if (visible) {
                         cell.addEventListener('click', () => toggleCell(x, y));
                         cell.className = 'cell';
                     } else {
@@ -325,6 +330,39 @@
         }
 
         document.getElementById('toggleBtn').onclick = () => {
+            startStop()
+        };
+
+        document.getElementById('cpuEnabled').addEventListener('change', () => {
+            clearInterval(cpuIntervalID);
+            if (running && document.getElementById('cpuEnabled').checked) {
+                const cpuDelay = +document.getElementById('cpuInterval').value;
+                cpuIntervalID = setInterval(cpuAddGlider, cpuDelay);
+            }
+        });
+
+        document.getElementById('resetBtn').onclick = () => {
+            createGrid();
+        };
+
+        document.getElementById('randomizeBtn').onclick = () => {
+            randomize();
+        };
+
+        function randomize(density = 0.25) {
+            const options = ['rock', 'paper', 'scissors', 0];
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (!isCellVisible(x, y)) continue;
+                    if (Math.random() < density) {
+                        grid[y][x] = options[Math.floor(Math.random() * options.length)];
+                    }
+                }
+            }
+            drawGrid();
+        }
+
+        function startStop() {
             running = !running;
             document.getElementById('toggleBtn').textContent = running ? 'Stop' : 'Start';
             clearInterval(interval);
@@ -333,27 +371,20 @@
                 const speed = +document.getElementById('speed').value;
                 const cpuDelay = +document.getElementById('cpuInterval').value;
                 interval = setInterval(step, speed);
-                cpuIntervalID = setInterval(cpuAddGlider, cpuDelay);
-            }
-        };
-
-        document.getElementById('resetBtn').onclick = () => {
-            createGrid();
-        };
-
-        document.getElementById('randomizeBtn').onclick = () => {
-            const options = ['rock', 'paper', 'scissors', 0];
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    if (!isCellVisible(x, y)) continue;
-                    grid[y][x] = options[Math.floor(Math.random() * options.length)];
+                if (document.getElementById('cpuEnabled').checked) {
+                    cpuIntervalID = setInterval(cpuAddGlider, cpuDelay);
                 }
             }
-            drawGrid();
-        };
+        }
 
-        createGrid();
-        document.getElementById('toggleBtn').click();
+        function startUp() {
+            createGrid();
+            randomize();
+            running = false;
+            startStop();
+        }
+
+        window.addEventListener('load', startUp);
     </script>
 </body>
 
