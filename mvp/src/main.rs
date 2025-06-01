@@ -21,7 +21,7 @@ struct Cell {
 #[derive(Resource)]
 struct Playing(bool);
 
-fn setup(mut commands: Commands) {
+fn setup_grid(mut commands: Commands) {
     commands.spawn(Camera2d);
 
     let mut rng = rng();
@@ -97,6 +97,50 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
     }
 }
 
+fn click_to_toggle_cell(
+    windows: Query<&Window>,
+    buttons: Res<ButtonInput<MouseButton>>,
+    camera_q: Single<(&Camera, &GlobalTransform)>,
+    mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
+) {
+    if !buttons.just_pressed(MouseButton::Left) {
+        return;
+    }
+
+    let (camera, camera_transform) = *camera_q;
+    let Ok(window) = windows.single() else {
+        return;
+    };
+
+    let Some(cursor_pos) = window.cursor_position() else {
+        return;
+    };
+    let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) else {
+        return;
+    };
+
+    for (mut sprite, mut cell, transform) in &mut cells {
+        let cell_pos = transform.translation.truncate();
+        let half_size = CELL_SIZE / 2.0;
+        let in_x = (world_pos.x - cell_pos.x).abs() < half_size;
+        let in_y = (world_pos.y - cell_pos.y).abs() < half_size;
+
+        if in_x && in_y {
+            cell.state = if cell.state == CellState::Alive {
+                CellState::Dead
+            } else {
+                CellState::Alive
+            };
+
+            sprite.color = match cell.state {
+                CellState::Alive => Color::BLACK,
+                CellState::Dead => Color::WHITE,
+            };
+            break;
+        }
+    }
+}
+
 #[derive(Component)]
 struct PlayingButton;
 
@@ -115,6 +159,7 @@ fn setup_ui(mut commands: Commands) {
         Name::new("RootUI"),
         children![(
             Button,
+            PlayingButton,
             Node {
                 width: Val::Px(150.0),
                 height: Val::Px(50.0),
@@ -128,7 +173,6 @@ fn setup_ui(mut commands: Commands) {
             children![(
                 Text::new("Play"),
                 TextFont {
-                    //font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                     font_size: 24.0,
                     ..default()
                 },
@@ -139,7 +183,7 @@ fn setup_ui(mut commands: Commands) {
     ));
 }
 
-fn toggle_play_button(
+fn handle_play_button(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &Children),
         (Changed<Interaction>, With<Button>),
@@ -179,11 +223,12 @@ fn main() {
             }),
             ..default()
         }))
-        .add_systems(Startup, setup)
+        .add_systems(Startup, setup_grid)
         .insert_resource(Playing(false))
         .add_systems(Startup, setup_ui)
         .insert_resource(Time::<Fixed>::from_seconds(0.5))
         .add_systems(FixedUpdate, game_of_life_step.run_if(is_playing))
-        .add_systems(Update, toggle_play_button)
+        .add_systems(Update, handle_play_button)
+        .add_systems(Update, click_to_toggle_cell)
         .run();
 }
