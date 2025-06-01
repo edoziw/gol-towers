@@ -1,0 +1,20 @@
+# Rust/Cargo
+target/
+Cargo.lock
+
+# Compilation intermediates
+*.rs.bk
+*.o
+*.so
+*.d
+
+# Rust build tool
+debug/
+release/
+
+# IDE/editor-specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
