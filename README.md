@@ -1,8 +1,4 @@
-# ideas
-- change from rock paper scissors to [wood -> water -> fire -> wood]
-- new material mana or gold which beats nothing and is beaten by all others
-- tower defense protect mana/gold
-- towers in bottom, or center?
-- cpu sees your gold and trys to send gliders towards it, based on the alive colors in front of it.
-- copy pattern
-- 45deg vs 0deg mode
+# Gol Towers
+
+This project was generated using the [Bevy New 2D](https://github.com/TheBevyFlock/bevy_new_2d) template.
+Check out the [documentation](https://github.com/TheBevyFlock/bevy_new_2d/blob/main/README.md) to get started!

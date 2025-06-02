@@ -1,20 +1,5 @@
-# Rust/Cargo
+# Rust builds
 target/
-Cargo.lock
 
-# Compilation intermediates
-*.rs.bk
-*.o
-*.so
-*.d
-
-# Rust build tool
-debug/
-release/
-
-# IDE/editor-specific
-.vscode/
-.idea/
-*.swp
-*.swo
-*.bak
+# This file contains environment-specific configuration like linker settings
+.cargo/config.toml

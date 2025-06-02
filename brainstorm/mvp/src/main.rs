@@ -260,7 +260,13 @@ struct SavedPatterns(HashMap<String, Vec<(i32, i32)>>);
 
 impl Default for SavedPatterns {
     fn default() -> Self {
-        SavedPatterns(HashMap::new())
+        SavedPatterns(HashMap::from([
+            ("2x2".to_string(), vec![(0, 0), (1, 0), (0, 1), (1, 1)]),
+            (
+                "glider".to_string(),
+                vec![(1, 0), (2, 1), (0, 2), (1, 2), (2, 2)],
+            ),
+        ]))
     }
 }
 
