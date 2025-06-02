@@ -117,7 +117,7 @@ jobs:
             targets: wasm32-unknown-unknown
             package_ext: .zip
             runner: ubuntu-latest
-
+        skip:
           - platform: linux
             targets: x86_64-unknown-linux-gnu
             package_ext: .zip
