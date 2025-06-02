@@ -1,4 +1,5 @@
 //! A high-level way to load collections of asset handles as resources.
+#![allow(dead_code)]
 
 use std::collections::VecDeque;
 

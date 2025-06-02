@@ -1,4 +1,5 @@
 //! Development tools for the game. This plugin is only enabled in dev builds.
+#![allow(dead_code)]
 
 use bevy::{
     dev_tools::states::log_transitions, input::common_conditions::input_just_pressed, prelude::*,

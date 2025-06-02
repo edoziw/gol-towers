@@ -1,4 +1,5 @@
 //! The title screen that appears after the splash screen.
+#![allow(dead_code)]
 
 use bevy::prelude::*;
 
