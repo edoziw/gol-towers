@@ -2,6 +2,7 @@
 #![cfg_attr(bevy_lint, feature(register_tool), register_tool(bevy))]
 // Disable console on Windows for non-dev builds.
 #![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
+#![allow(dead_code)]
 
 mod asset_tracking;
 mod audio;
@@ -13,8 +14,7 @@ mod menus;
 mod screens;
 mod theme;
 
-use std::f32::consts::E;
-
+//use std::f32::consts::E;
 #[allow(unused_imports)]
 use bevy::{asset::AssetMetaCheck, prelude::*};
 //use bevy_inspector_egui::quick::WorldInspectorPlugin;
