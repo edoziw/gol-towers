@@ -29,6 +29,27 @@ pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
     )
 }
 
+/// A root UI node that on the left full height.
+pub fn ui_root_left(name: impl Into<Cow<'static, str>>) -> impl Bundle {
+    (
+        Name::new(name),
+        Node {
+            position_type: PositionType::Absolute,
+            width: Px(400.0),
+            height: Percent(100.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            flex_direction: FlexDirection::Column,
+            row_gap: Px(20.0),
+            left: Px(10.0),
+            bottom: Px(10.0),
+            ..default()
+        },
+        // Don't block picking events for other UI roots.
+        Pickable::IGNORE,
+    )
+}
+
 /// A simple header label. Bigger than [`label`].
 pub fn header(text: impl Into<String>) -> impl Bundle {
     (
