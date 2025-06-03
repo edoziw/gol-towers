@@ -74,10 +74,13 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
                 }
                 let nx = cell.x as i32 + dx;
                 let ny = cell.y as i32 + dy;
-                if nx >= 0 && ny >= 0 && nx < GRID_WIDTH as i32 && ny < GRID_HEIGHT as i32 {
-                    if grid[ny as usize][nx as usize] == CellState::Alive {
-                        alive_neighbors += 1;
-                    }
+                if nx >= 0
+                    && ny >= 0
+                    && nx < GRID_WIDTH as i32
+                    && ny < GRID_HEIGHT as i32
+                    && grid[ny as usize][nx as usize] == CellState::Alive
+                {
+                    alive_neighbors += 1;
                 }
             }
         }
