@@ -1,5 +1,5 @@
 use bevy::{prelude::*, time::Fixed};
-use rand::{rng, Rng};
+use rand::{Rng, rng};
 use std::collections::HashMap;
 
 const GRID_WIDTH: usize = 64;
@@ -261,6 +261,7 @@ struct SavedPatterns(HashMap<String, Vec<(i32, i32)>>);
 impl Default for SavedPatterns {
     fn default() -> Self {
         SavedPatterns(HashMap::from([
+            ("1x1".to_string(), vec![(0, 0)]),
             ("2x2".to_string(), vec![(0, 0), (1, 0), (0, 1), (1, 1)]),
             (
                 "glider".to_string(),

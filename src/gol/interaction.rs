@@ -39,7 +39,8 @@ fn drag_end_or_click(
     camera_q: Query<(&Camera, &GlobalTransform)>,
     time: Res<Time<Fixed>>,
     drag_start: Res<DragStart>,
-    cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
+    mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
+    selected: Res<SelectedPattern>,
     mut saved: ResMut<SavedPatterns>,
 ) {
     if !buttons.just_released(MouseButton::Left) {
@@ -63,8 +64,19 @@ fn drag_end_or_click(
     };
 
     let duration = time.elapsed_secs_f64() - start_time;
-    if duration < 1.0 {
-        toggle_cell(cells, end);
+    let pattern_name = &selected.0;
+    if duration < 1.0 && start_pos.distance(end) < CELL_SIZE {
+        if selected.0 == "1x1" {
+            // If the selected pattern is "1x1", toggle the cell at the clicked position
+            toggle_cell(&mut cells, end);
+        } else {
+            // Otherwise, place pattern
+            let Some(pattern) = saved.0.get(&selected.0) else {
+                println!("Pattern '{}' not found in saved patterns.", selected.0);
+                return;
+            };
+            place_pattern(&mut cells, pattern_name, pattern, end);
+        }
         return;
     }
 
@@ -93,11 +105,24 @@ fn drag_end_or_click(
     println!("Saved pattern '{name}': {:?}", selected);
 }
 
+fn place_pattern(
+    cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>,
+    pattern_name: &String,
+    pattern: &Vec<(i32, i32)>,
+    world_pos: Vec2,
+) {
+    println!("Placing pattern '{pattern_name}' at {world_pos:?}");
+    for (x, y) in pattern {
+        let cell_pos = world_pos + Vec2::new(*x as f32 * CELL_SIZE, *y as f32 * CELL_SIZE);
+        toggle_cell(cells, cell_pos);
+    }
+}
+
 fn click_to_toggle_cell(
     windows: Query<&Window>,
     buttons: Res<ButtonInput<MouseButton>>,
     camera_q: Single<(&Camera, &GlobalTransform)>,
-    cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
+    mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
 ) {
     if !buttons.just_pressed(MouseButton::Left) {
         return;
@@ -114,11 +139,11 @@ fn click_to_toggle_cell(
     let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) else {
         return;
     };
-    toggle_cell(cells, world_pos);
+    toggle_cell(&mut cells, world_pos);
 }
 
-fn toggle_cell(mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>, world_pos: Vec2) {
-    for (mut sprite, mut cell, transform) in &mut cells {
+fn toggle_cell(cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>, world_pos: Vec2) {
+    for (mut sprite, mut cell, transform) in cells.iter_mut() {
         let cell_pos = transform.translation.truncate();
         let half_size = CELL_SIZE / 2.0;
         let in_x = (world_pos.x - cell_pos.x).abs() < half_size;
