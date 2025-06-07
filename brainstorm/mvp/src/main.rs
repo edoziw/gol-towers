@@ -256,7 +256,7 @@ fn is_playing(playing: Res<Playing>) -> bool {
 struct DragStart(Option<(Vec2, f64)>); // Store start position and time of drag
 
 #[derive(Resource)]
-struct SavedPatterns(HashMap<String, Vec<(i32, i32)>>);
+pub struct SavedPatterns(HashMap<String, Vec<(i32, i32)>>);
 
 impl Default for SavedPatterns {
     fn default() -> Self {

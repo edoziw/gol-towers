@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt}; // Assuming this is where Dir is defined
 
 #[derive(Resource)]
 pub struct SavedPatterns(pub HashMap<String, Pattern>);
@@ -44,20 +44,49 @@ impl Pattern {
 }
 
 impl Pattern {
-    pub fn to_heading(&self, new_dir: Dir) -> Pattern {
+    pub fn change_heading(&mut self, new_dir: Dir) {
         match self.dir {
-            Dir::None | Dir::Unknown => self.clone(),
+            Dir::N | Dir::E | Dir::S | Dir::W => match new_dir {
+                Dir::NW | Dir::NE | Dir::SW | Dir::SE => {
+                    info!(
+                        "Pattern '{}' is currently facing {:?}, changing to or from diagonal {:?} is not allowed",
+                        self.name, self.dir, new_dir
+                    );
+                    return;
+                }
+                _ => {}
+            },
+            Dir::NE | Dir::NW | Dir::SE | Dir::SW => match new_dir {
+                Dir::N | Dir::E | Dir::S | Dir::W => {
+                    info!(
+                        "Pattern '{}' is currently facing {:?}, changing to or from diagonal {:?} is not allowed",
+                        self.name, self.dir, new_dir
+                    );
+                    return;
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+        match self.dir {
+            Dir::None | Dir::Unknown => {
+                return;
+            }
             Dir::N | Dir::E | Dir::S | Dir::W | Dir::NE | Dir::NW | Dir::SE | Dir::SW => {
                 if new_dir == self.dir {
-                    self.clone()
+                    info!("Pattern '{}' is already facing {:?}", self.name, self.dir);
+                    return;
                 } else {
-                    Pattern {
-                        name: self.name.clone(),
-                        cells: rotate_from_a_to_b(self.cells.clone(), &self.dir, &new_dir),
-                        deletable: self.deletable,
-                        is_temp: self.is_temp,
-                        dir: new_dir,
-                    }
+                    info!(
+                        "Pattern '{}' changing direction from {:?} to {:?}",
+                        self.name, self.dir, new_dir
+                    );
+                    self.cells = rotate_from_a_to_b(self.cells.clone(), &self.dir, &new_dir);
+                    self.dir = new_dir;
+                    info!(
+                        "Pattern '{}' changed direction to {:?} with cells {:?}",
+                        self.name, self.dir, self.cells
+                    );
                 }
             }
         }
@@ -120,8 +149,8 @@ fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32,
         Dir::NW => match to {
             Dir::NW => rot_2d_0(&cells),
             Dir::NE => rot_2d_90(&cells),
-            Dir::SW => rot_2d_270(&cells),
             Dir::SE => rot_2d_180(&cells),
+            Dir::SW => rot_2d_270(&cells),
             _ => {
                 eprintln!("Illegal rotation from {:?} to {:?}", from, to);
                 cells
@@ -129,9 +158,9 @@ fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32,
         },
         Dir::SE => match to {
             Dir::SE => rot_2d_0(&cells),
-            Dir::NW => rot_2d_90(&cells),
-            Dir::NE => rot_2d_180(&cells),
-            Dir::SW => rot_2d_270(&cells),
+            Dir::SW => rot_2d_90(&cells),
+            Dir::NW => rot_2d_180(&cells),
+            Dir::NE => rot_2d_270(&cells),
             _ => {
                 eprintln!("Illegal rotation from {:?} to {:?}", from, to);
                 cells
@@ -139,9 +168,9 @@ fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32,
         },
         Dir::SW => match to {
             Dir::SW => rot_2d_0(&cells),
-            Dir::SE => rot_2d_90(&cells),
-            Dir::NW => rot_2d_180(&cells),
-            Dir::NE => rot_2d_270(&cells),
+            Dir::NW => rot_2d_90(&cells),
+            Dir::NE => rot_2d_180(&cells),
+            Dir::SE => rot_2d_270(&cells),
             _ => {
                 eprintln!("Illegal rotation from {:?} to {:?}", from, to);
                 cells
@@ -185,6 +214,58 @@ pub enum Dir {
     NW,
 }
 
+impl From<Vec2> for Dir {
+    fn from(vec: Vec2) -> Self {
+        if vec.x == 0.0 {
+            if vec.y == 0.0 {
+                return Dir::None;
+            } else if vec.y < 0.0 {
+                return Dir::S;
+            } else {
+                return Dir::N;
+            }
+        }
+        if vec.y == 0.0 {
+            if vec.x < 0.0 {
+                return Dir::W;
+            } else {
+                return Dir::E;
+            }
+        }
+        if vec.x > 0.0 {
+            if vec.y < 0.0 {
+                return Dir::SE;
+            } else {
+                return Dir::NE;
+            }
+        } else {
+            if vec.y < 0.0 {
+                return Dir::SW;
+            } else {
+                return Dir::NW;
+            }
+        }
+    }
+}
+
+impl fmt::Display for Dir {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Dir::None => "*",
+            Dir::Unknown => "?",
+            Dir::N => "N",
+            Dir::S => "S",
+            Dir::E => "E",
+            Dir::W => "W",
+            Dir::NE => "NE",
+            Dir::SE => "SE",
+            Dir::SW => "SW",
+            Dir::NW => "NW",
+        };
+        write!(f, "{}", s)
+    }
+}
+
 impl Default for SavedPatterns {
     fn default() -> Self {
         SavedPatterns(HashMap::from([
@@ -199,12 +280,12 @@ impl Default for SavedPatterns {
             Pattern::readonly_map_entry(
                 "toad",
                 vec![(0, 1), (1, 1), (2, 1), (1, 2), (2, 2)],
-                Dir::None,
+                Dir::S,
             ),
             Pattern::readonly_map_entry(
                 "beacon",
                 vec![(0, 0), (1, 0), (0, 1), (2, 2), (2, 3), (3, 3)],
-                Dir::None,
+                Dir::SW,
             ),
             Pattern::readonly_map_entry(
                 "LWSS",

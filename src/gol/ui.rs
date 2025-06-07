@@ -18,13 +18,28 @@ struct ClearButton;
 struct PatternButtons;
 
 #[derive(Component)]
-struct PatternButton;
+pub struct PatternButton {
+    pub pattern_name: String,
+}
+impl PatternButton {
+    pub fn from_name(name: &str) -> Self {
+        Self {
+            pattern_name: name.to_string(),
+        }
+    }
+}
 
 #[derive(Component)]
 struct DeletePatternButton;
 
 #[derive(Component)]
 struct SavePatternButton;
+
+#[derive(Component)]
+pub struct SellectedPatternButton;
+
+#[derive(Component)]
+pub struct UnsellectedPatternButton;
 
 const PLAY_COLOR: Color = Color::srgb(0.5, 0.0, 0.0); // dark red
 const PAUSE_COLOR: Color = Color::srgb(0.0, 0.5, 0.0); // dark green
@@ -177,32 +192,35 @@ fn spawn_pattern_buttons(
         } else {
             Color::NONE
         };
-        patterns_root
-            .spawn((
-                Button,
-                PatternButton, // <-- Add this marker so systems work
-                Name::new(format!("PatternButton:{}", name)),
-                BackgroundColor(color),
-                Node {
-                    flex_direction: FlexDirection::Row,
+        let label = format!("{}.{}:", name, pattern.dir);
+        let mut button = patterns_root.spawn((
+            Button,
+            PatternButton::from_name(name),
+            Name::new(format!("PatternButton:{}", name)),
+            BackgroundColor(color),
+            Node {
+                flex_direction: FlexDirection::Row,
+                ..default()
+            },
+        ));
+        button.with_children(|pattern_root| {
+            pattern_root.spawn((
+                Text::new(label),
+                TextFont {
+                    font_size: 20.0,
                     ..default()
                 },
-            ))
-            .with_children(|pattern_root| {
-                pattern_root.spawn((
-                    Text::new(format!("{}:", name)),
-                    TextFont {
-                        font_size: 20.0,
-                        ..default()
-                    },
-                    TextColor(Color::BLACK),
-                    TextLayout::default(),
-                ));
-                pattern_root.spawn((preview_node, preview_color, preview_children));
-                if pattern.deletable {
-                    add_buttons_when_deletable(pattern_root, name);
-                }
-            });
+                TextColor(Color::BLACK),
+                TextLayout::default(),
+            ));
+            pattern_root.spawn((preview_node, preview_color, preview_children));
+            if pattern.deletable {
+                add_buttons_when_deletable(pattern_root, name);
+            }
+        });
+        if name == &selected.0 {
+            button.insert(SellectedPatternButton);
+        }
     }
 }
 
@@ -337,18 +355,21 @@ fn handle_pattern_buttons(
 }
 
 fn update_pattern_button_highlights(
+    mut commands: Commands,
     selected: Res<SelectedPattern>,
-    mut query: Query<(&Name, &mut BackgroundColor), With<PatternButton>>,
+    mut query: Query<(Entity, &Name, &mut BackgroundColor), With<PatternButton>>,
 ) {
     if !selected.is_changed() {
         return;
     }
-    for (name, mut bg) in &mut query {
+    for (entity, name, mut bg) in &mut query {
         if let Some(pattern_name) = name.as_str().strip_prefix("PatternButton:") {
             if pattern_name == selected.0 {
                 *bg = BackgroundColor(PATTERN_SELECTED_COLOR);
+                commands.entity(entity).insert(SellectedPatternButton);
             } else {
                 *bg = BackgroundColor(PATTERN_COLOR);
+                commands.entity(entity).remove::<SellectedPatternButton>();
             }
         }
     }
@@ -432,16 +453,11 @@ fn handle_clear_button(
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Screen::Gameplay), spawn_ui)
         .add_systems(OnExit(Screen::Gameplay), cleanup_game_menu)
+        .add_systems(Update, (handle_play_button, handle_clear_button))
+        .add_systems(Update, (handle_pattern_buttons, refresh_pattern_buttons))
+        .add_systems(Update, (update_pattern_button_highlights,))
         .add_systems(
             Update,
-            (
-                handle_play_button,
-                handle_clear_button,
-                handle_pattern_buttons,
-                update_pattern_button_highlights,
-                refresh_pattern_buttons,
-                handle_delete_pattern_buttons,
-                handle_save_pattern_buttons,
-            ),
+            (handle_delete_pattern_buttons, handle_save_pattern_buttons),
         );
 }
