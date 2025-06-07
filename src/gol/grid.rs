@@ -87,7 +87,7 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
 
 pub(super) fn plugin(app: &mut App) {
     app //.add_systems(Startup, setup_grid)
-        .insert_resource(Time::<Fixed>::from_seconds(0.5))
+        .insert_resource(Time::<Fixed>::from_seconds(0.2))
         .add_systems(
             FixedUpdate,
             game_of_life_step
