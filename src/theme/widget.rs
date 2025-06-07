@@ -58,12 +58,13 @@ pub fn ui_root_right(name: impl Into<Cow<'static, str>>) -> impl Bundle {
             position_type: PositionType::Absolute,
             width: Px(400.0),
             height: Percent(100.0),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
+            align_items: AlignItems::FlexEnd,
+            justify_content: JustifyContent::FlexStart,
             flex_direction: FlexDirection::Column,
             row_gap: Px(20.0),
             right: Px(10.0),
             bottom: Px(10.0),
+            top: Px(10.0),
             ..default()
         },
         // Don't block picking events for other UI roots.

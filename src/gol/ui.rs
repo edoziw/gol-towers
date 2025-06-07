@@ -6,29 +6,101 @@ use crate::theme::widget;
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::{prelude::*, ui::Val::*};
+#[derive(Component)]
+struct GameMenuRoot;
 
 #[derive(Component)]
 struct ClearButton;
 
 #[derive(Component)]
+struct PatternButtons;
+
+#[derive(Component)]
 struct PatternButton;
 
 #[derive(Component)]
-struct PatternButtons;
+struct DeletePatternButton;
 
 const PLAY_COLOR: Color = Color::srgb(0.5, 0.0, 0.0); // dark red
 const PAUSE_COLOR: Color = Color::srgb(0.0, 0.5, 0.0); // dark green
 const PATTERN_COLOR: Color = Color::srgb(0.5, 0.5, 0.5); // dark grey
 const PATTERN_SELECTED_COLOR: Color = Color::srgb(0.8, 0.8, 0.5); // yellowish grey
 
+fn spawn_ui(mut commands: Commands, saved: Res<SavedPatterns>, selected: Res<SelectedPattern>) {
+    commands
+        .spawn((widget::ui_root_right("GameMenu"), GameMenuRoot))
+        .with_children(|root| {
+            root.spawn((
+                Button,
+                ClearButton,
+                Node {
+                    width: Val::Px(150.0),
+                    height: Val::Px(50.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    margin: UiRect::all(Val::Px(8.0)),
+                    ..default()
+                },
+                Name::new("ClearButton"),
+                BackgroundColor(PLAY_COLOR), // dark red
+            ))
+            .with_children(|clear_button| {
+                // Add a label to the button
+                clear_button.spawn((
+                    Text::new("Clear"),
+                    TextFont {
+                        font_size: 24.0,
+                        ..default()
+                    },
+                    TextColor(Color::WHITE),
+                    TextLayout::default(),
+                ));
+            });
+            spawn_pattern_buttons_in_parent(root, &saved, &selected);
+        });
+}
+
+fn cleanup_game_menu(mut commands: Commands, query: Query<Entity, With<GameMenuRoot>>) {
+    for entity in &query {
+        commands.entity(entity).despawn();
+    }
+}
+
+fn refresh_pattern_buttons(
+    mut commands: Commands,
+    saved: Res<SavedPatterns>,
+    selected: Res<SelectedPattern>,
+    pattern_list_query: Query<(Entity, Option<&Children>), With<PatternButtons>>,
+) {
+    if !saved.is_changed() {
+        return;
+    }
+    if pattern_list_query.is_empty() {
+        return;
+    }
+
+    for (parent, children_opt) in &pattern_list_query {
+        // Despawn all children of the PatternButtons node
+        if let Some(children) = children_opt {
+            for child in children.iter() {
+                commands.entity(child).despawn();
+            }
+        }
+        // Now spawn new pattern buttons as children
+        commands.entity(parent).with_children(|patterns_root| {
+            spawn_pattern_buttons(patterns_root, &saved, &selected);
+        });
+    }
+}
+
 fn spawn_pattern_buttons_in_parent(
     parent: &mut ChildSpawnerCommands,
     saved: &SavedPatterns,
     selected: &SelectedPattern,
 ) {
-    parent.spawn(build_pattern_buttons_bundle());
     parent
-        .spawn(build_pattern_button_bundle())
+        .spawn(build_pattern_buttons_bundle())
+        .with_child(build_pattern_button_bundle())
         .with_children(|parent| {
             spawn_pattern_buttons(parent, saved, selected);
         });
@@ -39,9 +111,9 @@ fn spawn_pattern_buttons_in_root(
     saved: &SavedPatterns,
     selected: &SelectedPattern,
 ) {
-    commands.spawn(build_pattern_buttons_bundle());
     commands
-        .spawn(build_pattern_button_bundle())
+        .spawn(build_pattern_buttons_bundle())
+        .with_child(build_pattern_button_bundle())
         .with_children(|parent| {
             spawn_pattern_buttons(parent, saved, selected);
         });
@@ -93,7 +165,8 @@ fn spawn_pattern_buttons(
         TextLayout::default(),
     ));
     for (name, pattern) in &saved.0 {
-        let (preview_node, preview_color, preview_children) = pattern_preview(&to_state(pattern));
+        let (preview_node, preview_color, preview_children) =
+            pattern_preview(&to_state(&pattern.cells));
         let color = if name == &selected.0 {
             PATTERN_SELECTED_COLOR // Highlight the selected pattern
         } else {
@@ -121,42 +194,34 @@ fn spawn_pattern_buttons(
                     TextLayout::default(),
                 ));
                 pattern_root.spawn((preview_node, preview_color, preview_children));
+                if pattern.deletable {
+                    pattern_root
+                        .spawn((
+                            Button,
+                            DeletePatternButton,
+                            Name::new(format!("DeletePatternButton:{}", name)),
+                            BackgroundColor(Color::srgb(0.8, 0.2, 0.2)),
+                            Node {
+                                width: Val::Px(32.0),
+                                height: Val::Px(32.0),
+                                margin: UiRect::left(Val::Px(8.0)),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                ..default()
+                            },
+                        ))
+                        .with_child((
+                            Text::new("X"),
+                            TextFont {
+                                font_size: 16.0,
+                                ..default()
+                            },
+                            TextColor(Color::WHITE),
+                            TextLayout::default(),
+                        ));
+                }
             });
     }
-}
-
-fn setup_ui(mut commands: Commands, saved: Res<SavedPatterns>, selected: Res<SelectedPattern>) {
-    commands
-        .spawn((widget::ui_root_right("GameMenu"),))
-        .with_children(|root| {
-            root.spawn((
-                Button,
-                ClearButton,
-                Node {
-                    width: Val::Px(150.0),
-                    height: Val::Px(50.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    margin: UiRect::all(Val::Px(8.0)),
-                    ..default()
-                },
-                Name::new("ClearButton"),
-                BackgroundColor(PLAY_COLOR), // dark red
-            ))
-            .with_children(|clear_button| {
-                // Add a label to the button
-                clear_button.spawn((
-                    Text::new("Clear"),
-                    TextFont {
-                        font_size: 24.0,
-                        ..default()
-                    },
-                    TextColor(Color::WHITE),
-                    TextLayout::default(),
-                ));
-            });
-            spawn_pattern_buttons_in_parent(root, &saved, &selected);
-        });
 }
 
 fn to_state(pattern: &Vec<(i32, i32)>) -> Vec<Vec<CellState>> {
@@ -220,25 +285,6 @@ fn pattern_preview(
     )
 }
 
-fn refresh_pattern_buttons(
-    mut commands: Commands,
-    saved: Res<SavedPatterns>,
-    selected: Res<SelectedPattern>,
-    pattern_list_query: Query<Entity, With<PatternButtons>>,
-) {
-    if !saved.is_changed() {
-        return;
-    }
-    // Despawn the old pattern button list
-    for entity in &pattern_list_query {
-        commands.entity(entity).despawn();
-    }
-    // Rebuild the pattern button list (call the relevant part of setup_ui)
-    // You can refactor the pattern button spawning into its own function and call it here.
-    // For example:
-    spawn_pattern_buttons_in_root(&mut commands, &saved, &selected);
-}
-
 fn handle_pattern_buttons(
     mut interaction_query: Query<
         (&Interaction, &Name),
@@ -270,6 +316,22 @@ fn update_pattern_button_highlights(
                 *bg = BackgroundColor(PATTERN_SELECTED_COLOR);
             } else {
                 *bg = BackgroundColor(PATTERN_COLOR);
+            }
+        }
+    }
+}
+
+fn handle_delete_pattern_buttons(
+    mut saved: ResMut<SavedPatterns>,
+    interaction_query: Query<
+        (&Interaction, &Name),
+        (Changed<Interaction>, With<DeletePatternButton>),
+    >,
+) {
+    for (interaction, name) in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            if let Some(pattern_name) = name.as_str().strip_prefix("DeletePatternButton:") {
+                saved.0.remove(pattern_name);
             }
         }
     }
@@ -316,7 +378,8 @@ fn handle_clear_button(
 }
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(Screen::Gameplay), setup_ui)
+    app.add_systems(OnEnter(Screen::Gameplay), spawn_ui)
+        .add_systems(OnExit(Screen::Gameplay), cleanup_game_menu)
         .add_systems(
             Update,
             (
@@ -325,6 +388,7 @@ pub(super) fn plugin(app: &mut App) {
                 handle_pattern_buttons,
                 update_pattern_button_highlights,
                 refresh_pattern_buttons,
+                handle_delete_pattern_buttons,
             ),
         );
 }

@@ -1,3 +1,5 @@
+use crate::gol::pattern::Pattern;
+
 use super::{
     cell::{Cell, CellState},
     grid::CELL_SIZE,
@@ -75,7 +77,7 @@ fn drag_end_or_click(
                 println!("Pattern '{}' not found in saved patterns.", selected.0);
                 return;
             };
-            place_pattern(&mut cells, pattern_name, pattern, end);
+            place_pattern(&mut cells, pattern_name, &pattern.cells, end);
         }
         return;
     }
@@ -100,7 +102,10 @@ fn drag_end_or_click(
 
     // For now, use a placeholder name; later prompt via UI
     let name = format!("Pattern{}", saved.0.len() + 1);
-    saved.0.insert(name.clone(), selected.clone());
+    saved.0.insert(
+        name.clone(),
+        Pattern::new_deleatable(name.clone(), selected.clone()),
+    );
 
     println!("Saved pattern '{name}': {:?}", selected);
 }
