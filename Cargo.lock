@@ -2339,7 +2339,10 @@ dependencies = [
  "bevy",
  "log",
  "rand",
+ "serde",
+ "serde_json",
  "tracing",
+ "web-sys",
 ]
 
 [[package]]

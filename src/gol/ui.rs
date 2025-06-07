@@ -1,11 +1,13 @@
 use super::cell::{Cell, CellState};
 use super::pattern::{SavedPatterns, SelectedPattern};
 use super::state::Playing;
+use crate::gol::patterns_io::{save_pattern, save_patterns};
 use crate::screens::Screen;
 use crate::theme::widget;
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::{prelude::*, ui::Val::*};
+
 #[derive(Component)]
 struct GameMenuRoot;
 
@@ -20,6 +22,9 @@ struct PatternButton;
 
 #[derive(Component)]
 struct DeletePatternButton;
+
+#[derive(Component)]
+struct SavePatternButton;
 
 const PLAY_COLOR: Color = Color::srgb(0.5, 0.0, 0.0); // dark red
 const PAUSE_COLOR: Color = Color::srgb(0.0, 0.5, 0.0); // dark green
@@ -195,33 +200,61 @@ fn spawn_pattern_buttons(
                 ));
                 pattern_root.spawn((preview_node, preview_color, preview_children));
                 if pattern.deletable {
-                    pattern_root
-                        .spawn((
-                            Button,
-                            DeletePatternButton,
-                            Name::new(format!("DeletePatternButton:{}", name)),
-                            BackgroundColor(Color::srgb(0.8, 0.2, 0.2)),
-                            Node {
-                                width: Val::Px(32.0),
-                                height: Val::Px(32.0),
-                                margin: UiRect::left(Val::Px(8.0)),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                ..default()
-                            },
-                        ))
-                        .with_child((
-                            Text::new("X"),
-                            TextFont {
-                                font_size: 16.0,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                            TextLayout::default(),
-                        ));
+                    add_buttons_when_deletable(pattern_root, name);
                 }
             });
     }
+}
+
+fn add_buttons_when_deletable(pattern_root: &mut ChildSpawnerCommands, name: &str) {
+    pattern_root
+        .spawn((
+            Button,
+            DeletePatternButton,
+            Name::new(format!("DeletePatternButton:{}", name)),
+            BackgroundColor(Color::srgb(0.8, 0.2, 0.2)),
+            Node {
+                width: Val::Px(32.0),
+                height: Val::Px(32.0),
+                margin: UiRect::left(Val::Px(8.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+        ))
+        .with_child((
+            Text::new("X"),
+            TextFont {
+                font_size: 16.0,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+            TextLayout::default(),
+        ));
+    pattern_root
+        .spawn((
+            Button,
+            SavePatternButton,
+            Name::new(format!("SavePatternButton:{}", name)),
+            BackgroundColor(Color::srgb(0.2, 0.8, 0.2)),
+            Node {
+                width: Val::Px(32.0),
+                height: Val::Px(32.0),
+                margin: UiRect::left(Val::Px(4.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+        ))
+        .with_child((
+            Text::new("💾"),
+            TextFont {
+                font_size: 16.0,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+            TextLayout::default(),
+        ));
 }
 
 fn to_state(pattern: &Vec<(i32, i32)>) -> Vec<Vec<CellState>> {
@@ -332,6 +365,25 @@ fn handle_delete_pattern_buttons(
         if *interaction == Interaction::Pressed {
             if let Some(pattern_name) = name.as_str().strip_prefix("DeletePatternButton:") {
                 saved.0.remove(pattern_name);
+                save_patterns(saved);
+                break;
+            }
+        }
+    }
+}
+
+fn handle_save_pattern_buttons(
+    saved: ResMut<SavedPatterns>,
+    interaction_query: Query<
+        (&Interaction, &Name),
+        (Changed<Interaction>, With<SavePatternButton>),
+    >,
+) {
+    for (interaction, name) in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            if let Some(pattern_name) = name.as_str().strip_prefix("SavePatternButton:") {
+                save_pattern(pattern_name.to_string(), saved);
+                break;
             }
         }
     }
@@ -389,6 +441,7 @@ pub(super) fn plugin(app: &mut App) {
                 update_pattern_button_highlights,
                 refresh_pattern_buttons,
                 handle_delete_pattern_buttons,
+                handle_save_pattern_buttons,
             ),
         );
 }

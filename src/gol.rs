@@ -2,6 +2,7 @@ pub mod cell;
 pub mod grid;
 pub mod interaction;
 pub mod pattern;
+pub mod patterns_io;
 pub mod state;
 pub mod ui;
 

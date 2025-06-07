@@ -1,10 +1,10 @@
-use crate::gol::pattern::Pattern;
-
 use super::{
     cell::{Cell, CellState},
     grid::CELL_SIZE,
     pattern::{SavedPatterns, SelectedPattern},
 };
+use crate::gol::{pattern::Pattern, patterns_io::load_patterns};
+use crate::screens::Screen;
 use bevy::prelude::*;
 
 #[derive(Resource, Default)]
@@ -172,8 +172,8 @@ fn toggle_cell(cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>, world_po
 
 pub(super) fn plugin(app: &mut App) {
     app //.add_systems(Update, click_to_toggle_cell)
-        .add_systems(Update, drag_start)
-        .add_systems(Update, drag_end_or_click)
+        .add_systems(Update, (drag_start, drag_end_or_click))
+        .add_systems(OnEnter(Screen::Splash), load_patterns)
         .insert_resource(DragStart::default())
         .insert_resource(SelectedPattern("1x1".to_string()))
         .insert_resource(SavedPatterns::default());
