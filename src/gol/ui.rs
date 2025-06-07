@@ -3,6 +3,7 @@ use super::pattern::{SavedPatterns, SelectedPattern};
 use super::state::Playing;
 use crate::screens::Screen;
 use crate::theme::widget;
+use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::{prelude::*, ui::Val::*};
 
@@ -12,10 +13,117 @@ struct ClearButton;
 #[derive(Component)]
 struct PatternButton;
 
+#[derive(Component)]
+struct PatternButtons;
+
 const PLAY_COLOR: Color = Color::srgb(0.5, 0.0, 0.0); // dark red
 const PAUSE_COLOR: Color = Color::srgb(0.0, 0.5, 0.0); // dark green
 const PATTERN_COLOR: Color = Color::srgb(0.5, 0.5, 0.5); // dark grey
 const PATTERN_SELECTED_COLOR: Color = Color::srgb(0.8, 0.8, 0.5); // yellowish grey
+
+fn spawn_pattern_buttons_in_parent(
+    parent: &mut ChildSpawnerCommands,
+    saved: &SavedPatterns,
+    selected: &SelectedPattern,
+) {
+    parent.spawn(build_pattern_buttons_bundle());
+    parent
+        .spawn(build_pattern_button_bundle())
+        .with_children(|parent| {
+            spawn_pattern_buttons(parent, saved, selected);
+        });
+}
+
+fn spawn_pattern_buttons_in_root(
+    commands: &mut Commands,
+    saved: &SavedPatterns,
+    selected: &SelectedPattern,
+) {
+    commands.spawn(build_pattern_buttons_bundle());
+    commands
+        .spawn(build_pattern_button_bundle())
+        .with_children(|parent| {
+            spawn_pattern_buttons(parent, saved, selected);
+        });
+}
+
+fn build_pattern_buttons_bundle() -> impl Bundle {
+    (
+        PatternButtons,
+        Node {
+            width: Val::Px(200.0),
+            height: Val::Px(200.0),
+            flex_direction: FlexDirection::Column,
+            row_gap: Px(20.0),
+            margin: UiRect {
+                left: Val::Px(16.0),
+                top: Val::Px(16.0),
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("PatternDropdown"),
+    )
+}
+
+fn build_pattern_button_bundle() -> impl Bundle {
+    (
+        Name::new("PatternLabel"),
+        BackgroundColor(Color::NONE),
+        Node {
+            flex_direction: FlexDirection::Column,
+            row_gap: Px(10.0),
+            ..default()
+        },
+    )
+}
+
+fn spawn_pattern_buttons(
+    patterns_root: &mut ChildSpawnerCommands,
+    saved: &SavedPatterns,
+    selected: &SelectedPattern,
+) {
+    patterns_root.spawn((
+        Text::new("Patterns:"),
+        TextFont {
+            font_size: 20.0,
+            ..default()
+        },
+        TextColor(Color::BLACK),
+        TextLayout::default(),
+    ));
+    for (name, pattern) in &saved.0 {
+        let (preview_node, preview_color, preview_children) = pattern_preview(&to_state(pattern));
+        let color = if name == &selected.0 {
+            PATTERN_SELECTED_COLOR // Highlight the selected pattern
+        } else {
+            Color::NONE
+        };
+        patterns_root
+            .spawn((
+                Button,
+                PatternButton, // <-- Add this marker so systems work
+                Name::new(format!("PatternButton:{}", name)),
+                BackgroundColor(color),
+                Node {
+                    flex_direction: FlexDirection::Row,
+                    ..default()
+                },
+            ))
+            .with_children(|pattern_root| {
+                pattern_root.spawn((
+                    Text::new(format!("{}:", name)),
+                    TextFont {
+                        font_size: 20.0,
+                        ..default()
+                    },
+                    TextColor(Color::BLACK),
+                    TextLayout::default(),
+                ));
+                pattern_root.spawn((preview_node, preview_color, preview_children));
+            });
+    }
+}
 
 fn setup_ui(mut commands: Commands, saved: Res<SavedPatterns>, selected: Res<SelectedPattern>) {
     commands
@@ -47,74 +155,7 @@ fn setup_ui(mut commands: Commands, saved: Res<SavedPatterns>, selected: Res<Sel
                     TextLayout::default(),
                 ));
             });
-            root.spawn((
-                Node {
-                    width: Val::Px(200.0),
-                    height: Val::Px(200.0),
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Px(20.0),
-                    margin: UiRect {
-                        left: Val::Px(16.0),
-                        top: Val::Px(16.0),
-                        ..default()
-                    },
-                    ..default()
-                },
-                Name::new("PatternDropdown"),
-            ));
-            root.spawn((
-                Name::new("PatternLabel"),
-                BackgroundColor(Color::NONE),
-                Node {
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Px(10.0),
-                    ..default()
-                },
-            ))
-            .with_children(|patterns_root| {
-                // Add a button for each pattern
-                patterns_root.spawn((
-                    Text::new("Patterns:"),
-                    TextFont {
-                        font_size: 20.0,
-                        ..default()
-                    },
-                    TextColor(Color::BLACK),
-                    TextLayout::default(),
-                ));
-                for (name, pattern) in &saved.0 {
-                    let (preview_node, preview_color, preview_children) =
-                        pattern_preview(&to_state(pattern));
-                    let color = if name == &selected.0 {
-                        PATTERN_SELECTED_COLOR // Highlight the selected pattern
-                    } else {
-                        Color::NONE
-                    };
-                    patterns_root
-                        .spawn((
-                            Button,
-                            PatternButton, // <-- Add this marker so systems work
-                            Name::new(format!("PatternButton:{}", name)),
-                            BackgroundColor(color),
-                            Node {
-                                flex_direction: FlexDirection::Row,
-                                ..default()
-                            },
-                        ))
-                        .with_children(|pattern_root| {
-                            pattern_root.spawn((
-                                Text::new(format!("{}:", name)),
-                                TextFont {
-                                    font_size: 20.0,
-                                    ..default()
-                                },
-                                TextColor(Color::BLACK),
-                                TextLayout::default(),
-                            ));
-                            pattern_root.spawn((preview_node, preview_color, preview_children));
-                        });
-                }
-            });
+            spawn_pattern_buttons_in_parent(root, &saved, &selected);
         });
 }
 
@@ -177,6 +218,25 @@ fn pattern_preview(
         BackgroundColor(Color::NONE),
         Children::spawn(children),
     )
+}
+
+fn refresh_pattern_buttons(
+    mut commands: Commands,
+    saved: Res<SavedPatterns>,
+    selected: Res<SelectedPattern>,
+    pattern_list_query: Query<Entity, With<PatternButtons>>,
+) {
+    if !saved.is_changed() {
+        return;
+    }
+    // Despawn the old pattern button list
+    for entity in &pattern_list_query {
+        commands.entity(entity).despawn();
+    }
+    // Rebuild the pattern button list (call the relevant part of setup_ui)
+    // You can refactor the pattern button spawning into its own function and call it here.
+    // For example:
+    spawn_pattern_buttons_in_root(&mut commands, &saved, &selected);
 }
 
 fn handle_pattern_buttons(
@@ -264,6 +324,7 @@ pub(super) fn plugin(app: &mut App) {
                 handle_clear_button,
                 handle_pattern_buttons,
                 update_pattern_button_highlights,
+                refresh_pattern_buttons,
             ),
         );
 }
