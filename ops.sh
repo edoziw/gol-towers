@@ -9,6 +9,10 @@ win() {
   bevy run
 }
 
+clippy() {
+    cargo clippy --locked --workspace --all-targets --profile ci --all-features
+}
+
 main() {
 if [[ "--debug" == "${1:-""}" ]]; then
   shift
@@ -22,7 +26,7 @@ local -r mode="${1:-web}"
 clear
 
 case "${mode}" in
-  web|win)
+  web|win|clippy)
     "$mode" "$@"
     ;;
   *)
