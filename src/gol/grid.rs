@@ -79,15 +79,27 @@ impl WorldRegion {
     }
 }
 
+enum InitialCellState {
+    Dead,
+    Ramdom,
+}
+
+const INITIAL_CELL_STATE: InitialCellState = InitialCellState::Dead;
+
 pub fn setup_grid(mut commands: Commands) {
     let mut rng = rand::thread_rng();
 
     for y in 0..GRID_HEIGHT {
         for x in 0..GRID_WIDTH {
-            let state = if rng.gen_bool(0.2) {
-                CellState::Alive
-            } else {
-                CellState::Dead
+            let state = match INITIAL_CELL_STATE {
+                InitialCellState::Dead => CellState::Dead,
+                InitialCellState::Ramdom => {
+                    if rng.gen_bool(0.2) {
+                        CellState::Alive
+                    } else {
+                        CellState::Dead
+                    }
+                }
             };
 
             let color = match state {
