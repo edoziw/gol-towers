@@ -76,7 +76,7 @@ impl CellType {
             CellType::Tree => vec![GREEN.into(), OLIVE.into()],
             CellType::Water => vec![BLUE.into(), AQUA.into()],
             CellType::Fire => vec![RED.into(), FUCHSIA.into()],
-            CellType::Empty => vec![WHITE.into(), GRAY.into()],
+            CellType::Empty => vec![Color::srgb(0.1, 0.1, 0.1)],
             CellType::PlainOn => vec![BLACK.into()],
             CellType::PlainOff => vec![WHITE.into()],
         }

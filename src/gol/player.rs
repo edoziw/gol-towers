@@ -36,7 +36,27 @@ pub fn populate_player_region(
 #[derive(Resource, Default)]
 pub struct AiGliderTimer(Timer);
 
-pub fn ai_spawn_glider_timer(
+struct PatternConfig {
+    name: &'static str,
+    dirs: &'static [Dir],
+}
+
+static AI_PATTERN_CONFIGS: &[PatternConfig] = &[
+    PatternConfig {
+        name: "glider",
+        dirs: &[Dir::SE, Dir::SW],
+    },
+    PatternConfig {
+        name: "LWSS",
+        dirs: &[Dir::S],
+    },
+    PatternConfig {
+        name: "face",
+        dirs: &[Dir::E],
+    },
+];
+
+pub fn ai_spawn_pattern_on_timer(
     mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
     mut timer: ResMut<AiGliderTimer>,
     time: Res<Time>,
@@ -47,18 +67,21 @@ pub fn ai_spawn_glider_timer(
     if !timer.0.just_finished() {
         return;
     }
-    let Some(pattern_unrotated) = find_pattern(saved.as_ref(), &"glider".to_string()) else {
+    let Some(pattern_config) = AI_PATTERN_CONFIGS.choose(&mut rand::thread_rng()) else {
+        return; // No patterns available
+    };
+
+    let Some(pattern_unrotated) = find_pattern(saved.as_ref(), pattern_config.name) else {
         return;
     };
 
     let ai_region: Region = Region::from(Dir::N, None);
-    let dirs = vec![Dir::SE, Dir::SW];
 
     spawn_pattern_at_random_in_region(
         &mut cells,
         &pattern_unrotated,
         &ai_region,
-        &dirs,
+        &pattern_config.dirs.to_vec(),
         CellState::Alive(CellType::Fire),
         CellState::Dead,
     );
@@ -94,7 +117,7 @@ pub(super) fn plugin(app: &mut App) {
     )))
     .add_systems(
         FixedUpdate,
-        ai_spawn_glider_timer
+        ai_spawn_pattern_on_timer
             .in_set(AppSystems::Update)
             .in_set(PausableSystems),
     );

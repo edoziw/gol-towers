@@ -10,6 +10,8 @@ use bevy::prelude::*;
 #[derive(Resource, Default)]
 struct DragStart(Option<(Vec2, f64)>); // Store start position and time of drag
 
+const CELL_STATE_PLAYER_CLICK: CellState = CellState::Alive(CellType::Water);
+
 fn drag_start(
     buttons: Res<ButtonInput<MouseButton>>,
     windows: Query<&Window>,
@@ -70,12 +72,7 @@ fn drag_end_or_click(
     if duration < 1.0 && start_pos.distance(end) < CELL_SIZE {
         if selected.0 == "1x1" {
             // If the selected pattern is "1x1", toggle the cell at the clicked position
-            toggle_cell(
-                &mut cells,
-                end,
-                CellState::Alive(CellType::Tree),
-                CellState::Dead,
-            );
+            toggle_cell(&mut cells, end, CELL_STATE_PLAYER_CLICK, CellState::Dead);
         } else {
             // Otherwise, place pattern
             let Some(pattern) = find_pattern(saved.as_ref(), pattern_name) else {
@@ -85,7 +82,7 @@ fn drag_end_or_click(
                 &mut cells,
                 pattern,
                 end,
-                CellState::Alive(CellType::Tree),
+                CELL_STATE_PLAYER_CLICK,
                 CellState::Dead,
             );
         }
@@ -120,7 +117,7 @@ fn drag_end_or_click(
     println!("Saved pattern '{name}': {:?}", selected);
 }
 
-pub fn find_pattern<'a>(patterns: &'a SavedPatterns, pattern_name: &String) -> Option<&'a Pattern> {
+pub fn find_pattern<'a>(patterns: &'a SavedPatterns, pattern_name: &str) -> Option<&'a Pattern> {
     let result = patterns.0.get(pattern_name);
     if result.is_none() {
         println!("Pattern '{}' not found in saved patterns.", pattern_name);
@@ -166,7 +163,7 @@ fn click_to_toggle_cell(
     toggle_cell(
         &mut cells,
         world_pos,
-        CellState::Alive(CellType::Tree),
+        CELL_STATE_PLAYER_CLICK,
         CellState::Dead,
     );
 }

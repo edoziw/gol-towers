@@ -444,7 +444,7 @@ fn handle_clear_button(
         if *interaction == Interaction::Pressed && name.as_str() == "ClearButton" {
             for (mut sprite, mut cell) in &mut cell_query {
                 cell.state = CellState::Dead;
-                sprite.color = Color::WHITE;
+                sprite.color = cell.state.color();
             }
         }
     }
