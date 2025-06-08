@@ -4,7 +4,7 @@ This project was generated using the [Bevy New 2D](https://github.com/TheBevyFlo
 Check out the [documentation](https://github.com/TheBevyFlock/bevy_new_2d/blob/main/README.md) to get started!
 
 ## Goals
-In the next 21 hours
+In the next 20 hours
 - have something playable, for now it is just GOL with some patterns
 
 ## TODO
@@ -42,13 +42,59 @@ increase engagement)
 - [ ] p8 Rename "current toad xxx" (it's not a toad), create the real toad pattern
 
 ---
-ai controlled
+resources for ai
+
+# source files
+
+## ai requests
+to ai: Ask if you need any of these in your context
+
+## files
+./brainstorm/index.html
+./src/asset_tracking.rs
+./src/audio.rs
+./src/demo/animation.rs
+./src/demo/level.rs
+./src/demo/mod.rs
+./src/demo/movement.rs
+./src/demo/player.rs
+./src/dev_tools.rs
+./src/gol/cell.rs
+./src/gol/grid.rs
+./src/gol/input.rs
+./src/gol/interaction.rs
+./src/gol/pattern.rs
+./src/gol/patterns_io/disk.rs
+./src/gol/patterns_io/web_storage.rs
+./src/gol/patterns_io.rs
+./src/gol/state.rs
+./src/gol/ui.rs
+./src/gol.rs
+./src/main.rs
+./src/menus/credits.rs
+./src/menus/main.rs
+./src/menus/mod.rs
+./src/menus/pause.rs
+./src/menus/settings.rs
+./src/screens/gameplay.rs
+./src/screens/loading.rs
+./src/screens/mod.rs
+./src/screens/splash.rs
+./src/screens/title.rs
+./src/theme/interaction.rs
+./src/theme/mod.rs
+./src/theme/palette.rs
+./src/theme/widget.rs
+
+---
+# ai controlled below here
+
+---
 # Gol Towers – AI controlled TODO List updated
 
 ## AI-Generated Suggestions
 
 ---
-2
 
 ## AI/Dev High Priority Suggestions
 
@@ -128,49 +174,4 @@ This will unlock the rest of the gameplay loop and make it easy to add CPU actio
 - [ ] p7 Add more patterns (classic, rare, user-submitted)
 - [ ] p7 Add achievements or unlockables
 - [ ] p5 Add multiple levels or scenarios
-
----
-resources for ai
-
-# source files
-
-## ai requests
-to ai: Ask if you need any of these in your context
-
-## files
-./brainstorm/index.html
-./src/asset_tracking.rs
-./src/audio.rs
-./src/demo/animation.rs
-./src/demo/level.rs
-./src/demo/mod.rs
-./src/demo/movement.rs
-./src/demo/player.rs
-./src/dev_tools.rs
-./src/gol/cell.rs
-./src/gol/grid.rs
-./src/gol/input.rs
-./src/gol/interaction.rs
-./src/gol/pattern.rs
-./src/gol/patterns_io/disk.rs
-./src/gol/patterns_io/web_storage.rs
-./src/gol/patterns_io.rs
-./src/gol/state.rs
-./src/gol/ui.rs
-./src/gol.rs
-./src/main.rs
-./src/menus/credits.rs
-./src/menus/main.rs
-./src/menus/mod.rs
-./src/menus/pause.rs
-./src/menus/settings.rs
-./src/screens/gameplay.rs
-./src/screens/loading.rs
-./src/screens/mod.rs
-./src/screens/splash.rs
-./src/screens/title.rs
-./src/theme/interaction.rs
-./src/theme/mod.rs
-./src/theme/palette.rs
-./src/theme/widget.rs
 
