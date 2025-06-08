@@ -41,22 +41,27 @@ pub fn ai_spawn_glider_timer(
 ) {
     timer.0.tick(time.delta());
     if timer.0.just_finished() {
-        // Pick random x in AI region
+        // Pick random position in the AI region (top 1/5th of the grid)
+        // and ensure the pattern fits on the grid.
         let mut rng = rand::thread_rng();
-        let x = rng.gen_range(0..(GRID_WIDTH - 3));
-        let y = rng.gen_range(0..REGION_DEFAULT_HEIGHT);
 
-        // Pick SE or SW
-        let dir = if rng.gen_bool(0.5) { Dir::SE } else { Dir::SW };
-
-        // Place a glider pattern at (x, y) with direction
         if let Some(pattern) = find_pattern(saved.as_ref(), &"glider".to_string()) {
+            // Pick SE or SW heading each spawn
+            let dir = if rng.gen_bool(0.5) { Dir::SE } else { Dir::SW };
             let mut rotated = pattern.clone();
             rotated.change_heading(dir);
+
+            // Calculate pattern dimensions for boundary checks
+            let (pat_w, pat_h) = pattern.dimensions();
+            let x_max = GRID_WIDTH.saturating_sub(pat_w);
+            let y_min = GRID_HEIGHT - REGION_DEFAULT_HEIGHT;
+            let y_max = GRID_HEIGHT.saturating_sub(pat_h);
+
+            let x = rng.gen_range(0..=x_max);
+            let y = rng.gen_range(y_min..=y_max);
+
             let world_pos = grid_to_world(x, y);
             place_pattern(&mut cells, &rotated, world_pos);
-            // You will need a function to place a pattern at grid coords (x, y)
-            // e.g., place_pattern_at_grid(&mut cells, &pattern.cells, x, y);
         }
     }
 }
