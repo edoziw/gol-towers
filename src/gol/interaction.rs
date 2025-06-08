@@ -122,7 +122,7 @@ pub fn place_pattern(
     pattern: &Pattern,
     world_pos: Vec2,
 ) {
-    println!("Placing pattern '{}' at {world_pos:?}", pattern.name);
+    info!("Placing pattern '{}' at {world_pos:?}", pattern.name);
     for (x, y) in pattern.cells.iter() {
         let cell_pos = world_pos + Vec2::new(*x as f32 * CELL_SIZE, *y as f32 * CELL_SIZE);
         toggle_cell(cells, cell_pos);
