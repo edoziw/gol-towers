@@ -6,7 +6,6 @@ use crate::{
         interaction::{find_pattern, place_pattern},
         pattern::{Dir, Pattern, SavedPatterns},
     },
-    screens::Screen,
 };
 use bevy::prelude::*;
 use rand::prelude::*;
@@ -77,7 +76,6 @@ pub(super) fn plugin(app: &mut App) {
         1.0,
         TimerMode::Repeating,
     )))
-    .add_systems(OnEnter(Screen::Gameplay), populate_player_region)
     .add_systems(
         FixedUpdate,
         ai_spawn_glider_timer

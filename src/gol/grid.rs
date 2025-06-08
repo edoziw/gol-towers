@@ -1,7 +1,10 @@
 use super::cell::{Cell, CellState};
 use crate::{
     AppSystems, PausableSystems,
-    gol::{cell::RegionOwner, pattern::Dir},
+    gol::{
+        cell::{CellType, RegionOwner},
+        pattern::Dir,
+    },
     screens::Screen,
 };
 use bevy::prelude::*;
@@ -103,21 +106,17 @@ pub fn setup_grid(mut commands: Commands) {
 
     for y in 0..GRID_HEIGHT {
         for x in 0..GRID_WIDTH {
-            let state = match INITIAL_CELL_STATE {
-                InitialCellState::Dead => CellState::Dead,
+            let (state, kind) = match INITIAL_CELL_STATE {
+                InitialCellState::Dead => (CellState::Dead, CellType::Empty),
                 InitialCellState::Ramdom => {
                     if rng.gen_bool(0.2) {
-                        CellState::Alive
+                        (CellState::Alive, CellType::Fire)
                     } else {
-                        CellState::Dead
+                        (CellState::Dead, CellType::Empty)
                     }
                 }
             };
 
-            let color = match state {
-                CellState::Alive => Color::BLACK,
-                CellState::Dead => Color::WHITE,
-            };
             let region_default_height = GRID_HEIGHT / 5;
             // Assign region
             let region = if y >= GRID_HEIGHT - region_default_height {
@@ -131,7 +130,7 @@ pub fn setup_grid(mut commands: Commands) {
             commands.spawn((
                 StateScoped(Screen::Gameplay),
                 Sprite {
-                    color,
+                    color: kind.color(),
                     custom_size: Some(Vec2::splat(CELL_SIZE)),
                     ..Default::default()
                 },
@@ -145,6 +144,7 @@ pub fn setup_grid(mut commands: Commands) {
                     y,
                     state,
                     region,
+                    kind,
                 },
             ));
         }
@@ -196,8 +196,7 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
 }
 
 pub(super) fn plugin(app: &mut App) {
-    app //.add_systems(Startup, setup_grid)
-        .insert_resource(Time::<Fixed>::from_seconds(0.2))
+    app.insert_resource(Time::<Fixed>::from_seconds(0.2))
         .add_systems(
             FixedUpdate,
             game_of_life_step
