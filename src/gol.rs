@@ -1,4 +1,5 @@
 pub mod cell;
+pub mod debug;
 pub mod grid;
 pub mod input;
 pub mod interaction;
@@ -17,6 +18,7 @@ pub(super) fn plugin(app: &mut App) {
         grid::plugin,
         input::plugin,
         player::plugin,
+        debug::plugin,
     ))
     .insert_resource(state::Playing(false));
 }
