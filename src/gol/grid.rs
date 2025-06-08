@@ -57,11 +57,15 @@ impl Region {
         Self { bounds: bounds }
     }
     pub fn to_world(&self) -> WorldRegion {
+        let world_min = Vec2::new(
+            (self.bounds.min.x - GRID_WIDTH as f32 / 2.0) * CELL_SIZE,
+            (self.bounds.min.y - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
+        );
         WorldRegion::new(
-            self.bounds.min.x * CELL_SIZE,
-            self.bounds.min.y * CELL_SIZE,
-            self.bounds.width() * CELL_SIZE,
-            self.bounds.height() * CELL_SIZE,
+            world_min.x,
+            world_min.y,
+            world_min.x + self.bounds.width() * CELL_SIZE,
+            world_min.y + self.bounds.height() * CELL_SIZE,
         )
     }
 }
