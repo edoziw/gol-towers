@@ -94,7 +94,7 @@ impl Pattern {
 }
 
 fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32, i32)> {
-    match from {
+    let rotated = match from {
         Dir::N => match to {
             Dir::N => rot_2d_0(&cells),
             Dir::E => rot_2d_90(&cells),
@@ -177,16 +177,23 @@ fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32,
             }
         },
         Dir::None | Dir::Unknown => {
-            if from == to {
-                cells
-            } else {
+            if from != to {
                 eprintln!("Illegal rotation from {:?} to {:?}", from, to);
-                cells
             }
+            cells
         }
-    }
+    };
+    translate_to_positive_coordinates(&rotated)
 }
 
+fn translate_to_positive_coordinates(cells: &[(i32, i32)]) -> Vec<(i32, i32)> {
+    let min_x = cells.iter().map(|(x, _)| *x).min().unwrap_or(0);
+    let min_y = cells.iter().map(|(_, y)| *y).min().unwrap_or(0);
+    cells
+        .into_iter()
+        .map(|(x, y)| (x - min_x, y - min_y))
+        .collect()
+}
 fn rot_2d_0(cells: &[(i32, i32)]) -> Vec<(i32, i32)> {
     cells.to_vec()
 }
@@ -301,6 +308,71 @@ impl Default for SavedPatterns {
                     (3, 3),
                 ],
                 Dir::W,
+            ),
+            Pattern::readonly_map_entry(
+                "R-Pentomino",
+                vec![(2, 1), (1, 2), (2, 2), (2, 3), (3, 3)],
+                Dir::W,
+            ),
+            Pattern::readonly_map_entry(
+                "face", //https://www.reddit.com/r/gameoflife/comments/g6u4m6/interesting_face_pattern_in_conways_game_of_life/
+                vec![
+                    (3, 2),
+                    (2, 3),
+                    (4, 3),
+                    (1, 4),
+                    (3, 4),
+                    (5, 4),
+                    (1, 5),
+                    (2, 5),
+                    (4, 5),
+                    (5, 5),
+                    (1, 6),
+                    (5, 6),
+                ],
+                Dir::None,
+            ),
+            Pattern::readonly_map_entry(
+                "Gosper Glider Gun",
+                vec![
+                    (15, 7),
+                    (16, 7),
+                    (14, 8),
+                    (18, 8),
+                    (13, 9),
+                    (19, 9),
+                    (27, 9),
+                    (3, 10),
+                    (4, 10),
+                    (13, 10),
+                    (17, 10),
+                    (19, 10),
+                    (20, 10),
+                    (25, 10),
+                    (27, 10),
+                    (3, 11),
+                    (4, 11),
+                    (13, 11),
+                    (19, 11),
+                    (23, 11),
+                    (24, 11),
+                    (14, 12),
+                    (18, 12),
+                    (23, 12),
+                    (24, 12),
+                    (37, 12),
+                    (38, 12),
+                    (15, 13),
+                    (16, 13),
+                    (23, 13),
+                    (24, 13),
+                    (37, 13),
+                    (38, 13),
+                    (25, 14),
+                    (27, 14),
+                    (27, 15),
+                ],
+                Dir::SE,
             ),
         ]))
     }

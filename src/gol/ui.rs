@@ -143,8 +143,6 @@ fn build_pattern_buttons_bundle() -> impl Bundle {
     (
         PatternButtons,
         Node {
-            width: Val::Px(200.0),
-            height: Val::Px(200.0),
             flex_direction: FlexDirection::Column,
             row_gap: Px(20.0),
             margin: UiRect {
