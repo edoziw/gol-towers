@@ -109,7 +109,7 @@ fn drag_end_or_click(
     println!("Saved pattern '{name}': {:?}", selected);
 }
 
-fn find_pattern<'a>(patterns: &'a SavedPatterns, pattern_name: &String) -> Option<&'a Pattern> {
+pub fn find_pattern<'a>(patterns: &'a SavedPatterns, pattern_name: &String) -> Option<&'a Pattern> {
     let result = patterns.0.get(pattern_name);
     if result.is_none() {
         println!("Pattern '{}' not found in saved patterns.", pattern_name);
