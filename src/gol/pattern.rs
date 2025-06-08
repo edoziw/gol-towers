@@ -91,6 +91,17 @@ impl Pattern {
             }
         }
     }
+
+    /// Returns the width and height of the pattern in cells.
+    ///
+    /// The pattern's cells are guaranteed to have non-negative
+    /// coordinates, so the dimensions are the maximum x and y values
+    /// plus one.
+    pub fn dimensions(&self) -> (usize, usize) {
+        let max_x = self.cells.iter().map(|(x, _)| *x).max().unwrap_or(0);
+        let max_y = self.cells.iter().map(|(_, y)| *y).max().unwrap_or(0);
+        ((max_x + 1) as usize, (max_y + 1) as usize)
+    }
 }
 
 fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32, i32)> {
