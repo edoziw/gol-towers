@@ -6,3 +6,5 @@ Check out the [documentation](https://github.com/TheBevyFlock/bevy_new_2d/blob/m
 todo
 delete the duck and update credits
 make it a game :)
+current toad xxx
+             .xx is cool but its not a toad, rename it and create the real toad?

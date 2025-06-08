@@ -182,7 +182,12 @@ fn spawn_pattern_buttons(
         TextColor(Color::BLACK),
         TextLayout::default(),
     ));
-    for (name, pattern) in &saved.0 {
+
+    // Collect and sort pattern names by cell count
+    let mut patterns: Vec<_> = saved.0.iter().collect();
+    patterns.sort_by_key(|(_, pattern)| pattern.cells.len());
+
+    for (name, pattern) in patterns {
         let (preview_node, preview_color, preview_children) =
             pattern_preview(&to_state(&pattern.cells));
         let color = if name == &selected.0 {
@@ -263,7 +268,7 @@ fn add_buttons_when_deletable(pattern_root: &mut ChildSpawnerCommands, name: &st
             },
         ))
         .with_child((
-            Text::new("💾"),
+            Text::new("^"),
             TextFont {
                 font_size: 16.0,
                 ..default()
