@@ -44,7 +44,7 @@ pub enum RegionOwner {
     AI,
 }
 
-#[derive(Component, Clone, Copy, PartialEq)]
+#[derive(Component, Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum CellType {
     Tree,
     Water,

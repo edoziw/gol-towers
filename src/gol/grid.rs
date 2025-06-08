@@ -182,7 +182,7 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
         let next_state = match (cell.state.is_alive(), alive_neighbors.len()) {
             (true, 2..=3) => alive_state_from(cell.state.kind(), &alive_neighbors),
 
-            (false, 3) => alive_state_from(cell.state.kind(), &alive_neighbors),
+            (false, 3) => alive_state_from(most_frequent_kind(&alive_neighbors), &alive_neighbors),
             _ => CellState::Dead,
         };
 
@@ -193,25 +193,45 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
     }
 }
 
-fn alive_state_from(current_kind: CellType, alive_neighbors: &Vec<CellType>) -> CellState {
+fn most_frequent_kind(alive_neighbors: &Vec<CellType>) -> CellType {
     if alive_neighbors.is_empty() {
-        return CellState::Alive(current_kind);
+        warn!("No alive neighbors found, returning default CellType::PlainOn");
+        return CellType::PlainOn;
+    }
+    let mut counts = std::collections::HashMap::new();
+
+    for &kind in alive_neighbors {
+        *counts.entry(kind).or_insert(0) += 1;
+    }
+
+    counts
+        .into_iter()
+        .max_by_key(|&(_, count)| count)
+        .map_or(CellType::Empty, |(kind, _)| kind)
+}
+
+fn alive_state_from(
+    current_kind_or_most_alive: CellType,
+    alive_neighbors: &Vec<CellType>,
+) -> CellState {
+    if alive_neighbors.is_empty() {
+        return CellState::Alive(current_kind_or_most_alive);
     }
     let mut rng = rand::thread_rng();
 
-    //top two kinds by frequency in alive_neighbors plus current_kind
-    let top_two_kinds: (CellType, CellType) =
-        alive_neighbors
-            .iter()
-            .fold((current_kind, current_kind), |(a, b), &neighbor| {
-                if neighbor == a || neighbor == b {
-                    (a, b)
-                } else if rng.gen_bool(0.5) {
-                    (neighbor, a)
-                } else {
-                    (a, neighbor)
-                }
-            });
+    //top two kinds by frequency in alive_neighbors plus current_kind_or_most_alive
+    let top_two_kinds: (CellType, CellType) = alive_neighbors.iter().fold(
+        (current_kind_or_most_alive, current_kind_or_most_alive),
+        |(a, b), &neighbor| {
+            if neighbor == a || neighbor == b {
+                (a, b)
+            } else if rng.gen_bool(0.5) {
+                (neighbor, a)
+            } else {
+                (a, neighbor)
+            }
+        },
+    );
     let next_kind = match top_two_kinds.0.battle(&top_two_kinds.1) {
         Outcome::Win => top_two_kinds.0,
         Outcome::Lose => top_two_kinds.1,
