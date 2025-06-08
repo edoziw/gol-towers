@@ -3,89 +3,142 @@
 This project was generated using the [Bevy New 2D](https://github.com/TheBevyFlock/bevy_new_2d) template.
 Check out the [documentation](https://github.com/TheBevyFlock/bevy_new_2d/blob/main/README.md) to get started!
 
-todo
-- make it a game :)
-    - based on brainstorm/index.html (javascript poc)
-    - add region entities which track population of square parts of the grid
-    - then add a CpuPlayer component and its region which fires gliders
-        - from random positions in the region of the top 1/5th
-        - headings (SE, SW)
-    - then improve the notion of a player entity
-        - a region for the player
-            - tracks the population under control of the player
-            - tower position entities
-            - resource (or property of player, which is better? ) storing the current selected tower
-            - action to fire gliders from the selected tower
-            - action to switch towers via keyboard
-- delete the duck and update credits
-- current toad xxx
-             .xx is cool but its not a toad, rename it and create the real toad?
+## Goals
+In the next 21 hours
+- have something playable, for now it is just GOL with some patterns
 
----
-# Gol Towers – AI controlled TODO List
+## TODO
+### TODO and milestones game
+- [ ] p0 Make it a game :)
+- [ ] p2 Base on brainstorm/index.html (javascript poc)
+#### m1 this first
+- [ ] p1 Add region entities to track population of grid sections
+- [ ] p1 Add CpuAiPlayer component and region that fires gliders
+    - [ ] p1 Fire from random positions in the top 1/5th region
+    - [ ] p1 Support SE, SW headings
+- [ ] p1 Improve player entity
+    - [ ] p1 Define player region
+    - [ ] p2 Track population under player control
+    - [ ] p1 Add tower position entities
+    - [ ] p1 Mark current selected tower (resource or property?)
+    - [ ] p1 Action to fire gliders from selected tower
+    - [ ] p2 Action to switch towers via keyboard
+- [ ] p2 Add win/loss/game-over conditions
+- [ ] p3 Add scoring system (population, territory, towers controlled, etc)
+- [ ] p3 Add a "share pattern" feature (copy/paste pattern code or link). (this will 
+#### m2 then this
+- [ ] p3 add the rock paper scisors logic and theme from the index.html poc
+- [ ] p4 Add CpuAiPlayer defense region
+- [ ] p3 Add a "How to Play" modal or page (rules, controls, RPS logic).
+- [ ] p3 Add a "sandbox" mode (no CPU, just experiment).
+- [ ] p9 Add analytics or basic telemetry (optional, for playtesting).
+- [ ] p5 Add a "random pattern" button for fun experimentation.
+increase engagement)
+- [ ] p5 Add a "challenge" mode (preset scenarios with goals).
+- [ ] p7 Add a "spectator" mode (watch CPU vs CPU).
 
-## Gameplay & Features
-- [ ] p1 Make it a game :)
-    - [ ] p2 Base on brainstorm/index.html (javascript poc)
-    - [ ] p1 Add region entities to track population of grid sections
-    - [ ] p1 Add CpuPlayer component and region that fires gliders
-        - [ ] p1 Fire from random positions in the top 1/5th region
-        - [ ] p1 Support SE, SW headings
-    - [ ] p1 Improve player entity
-        - [ ] Define player region
-        - [ ] Track population under player control
-        - [ ] p1 Add tower position entities
-        - [ ] Store current selected tower (resource or property?)
-        - [ ] p1 Action to fire gliders from selected tower
-        - [ ] Action to switch towers via keyboard
+### TODO misc
 - [ ] p9 Delete the duck and update credits
 - [ ] p8 Rename "current toad xxx" (it's not a toad), create the real toad pattern
 
+---
+ai controlled
+# Gol Towers – AI controlled TODO List updated
+
 ## AI-Generated Suggestions
 
-### Gameplay
-- [ ] Add tower firing cooldowns or resource costs
-- [ ] Add CPU player AI (glider firing logic, region defense/attack)
-- [ ] Add win/loss/game-over conditions
-- [ ] Add scoring system (population, territory, towers controlled, etc)
-- [ ] Add undo/redo for pattern placement
-- [ ] Add pattern rotation preview before placement
-- [ ] Add pattern mirroring (horizontal/vertical flip)
-- [ ] Add pattern import/export (RLE or other formats)
-- [ ] Add pattern editor (create/save custom patterns in-game)
-- [ ] Add sound effects for actions (placement, firing, etc)
-- [ ] Add visual effects for glider firing and collisions
-- [ ] Add tutorial or help overlay for new players
+---
+2
 
-### UI/UX
-- [ ] Improve pattern selection UI (search, filter, favorites)
-- [ ] Add tooltips for buttons and patterns
-- [ ] Add keyboard navigation for all menus
-- [ ] Add accessibility options (colorblind mode, font scaling)
-- [ ] Add settings menu (audio, controls, gameplay tweaks)
+## AI/Dev High Priority Suggestions
 
-### Code Quality & Architecture
-- [ ] Add unit and integration tests for core logic (pattern rotation, region control, etc)
-- [ ] Refactor pattern rotation logic for clarity and extensibility
-- [ ] Document all public functions and modules
-- [ ] Add CI/CD pipeline for automated builds and tests
-- [ ] Add code linting and formatting checks
+- **p1 Focus on Core Gameplay Loop:**  
+  Ensure you have a playable loop: player selects/fires, CPU responds, win/loss is possible. This is the foundation for everything else.
 
-### Web & Platform
-- [ ] Add mobile/touch support (drag, pinch, tap)
-- [ ] Optimize for WebAssembly (performance, asset loading)
-- [ ] Add PWA support (installable web app)
-- [ ] Add save/load for game state (local storage, cloud)
+- **p1 Region & Tower Logic:**  
+  Implement region entities and tower selection/firing. This will enable both player and CPU actions and is critical for making it a game.
 
-### Content
-- [ ] Add more patterns (classic, rare, user-submitted)
-- [ ] Add achievements or unlockables
-- [ ] Add multiple levels or scenarios
+- **p1 CPU AI Glider Firing:**  
+  Get the CPU firing gliders from random/top regions. Even a simple random AI will make the game feel alive and testable.
+
+- **p2 Win/Loss Conditions:**  
+  Add basic win/loss logic (e.g., player/CPU region population reaches zero or a threshold). This gives the game an end state.
+
+- **p2 Sound Feedback:**  
+  Add simple sound effects for actions (placement, firing, etc). This gives immediate feedback and makes the game feel more responsive.
 
 ---
 
+### **Best First Step**
 
-source files :
+**Implement the region and tower logic (p1):**
+- Add region entities to the grid.
+- Allow the player to select and fire from towers.
+- Track which region is controlled by the player/CPU.
+
+This will unlock the rest of the gameplay loop and make it easy to add CPU actions, scoring, and win/loss logic.
+
+---
+
+**Once you have the core loop working, you can iterate quickly on AI, polish, and UX. If you want code review or targeted help, share your region/tower logic or main gameplay system!**
+
+### suggestions 1
+- **Prioritization:** Your use of `p1`–`p9` is great! Consider reviewing priorities after each milestone to keep the list focused.
+- **Sectioning:** Your TODOs are well-organized. As the project grows, consider splitting the README into separate docs for gameplay, AI, UI/UX, and technical tasks.
+- **AI/Automation:** If you want to automate or track progress, consider using GitHub Projects or Issues with labels matching your priorities (e.g., `p1`, `p2`).
+- **Playability:** For your "Make it a game :)" goal, focus on a playable loop (player action, CPU response, win/loss) before adding polish.
+- **Pattern System:** Your pattern rotation, mirroring, and preview features are high-value for both gameplay and UX. Consider bumping their priority if you have time.
+- **AI/CPU:** The brainstorm/index.html is a great reference for RPS logic and CPU behavior. If you want to port more of its logic, let me know which parts to focus on.
+- **Testing:** If you want to add tests, start with pattern rotation and placement logic, as bugs there can be subtle.
+- **Web/Platform:** If you plan to share the game, PWA and mobile/touch support will make it more accessible.
+- **Content:** Adding more patterns and achievements can be a good "stretch goal" if you finish core gameplay early.
+
+### TODO Gameplay
+- [ ] p4 Add tower firing cooldowns or resource costs
+- [ ] p9 Add undo/redo for pattern placement
+- [ ] p8 improve pattern rotation preview before placement
+- [ ] p7 Add pattern mirroring (horizontal/vertical flip)
+- [ ] p5 Add pattern import/export (RLE or other formats) (workaround save button and copy from disk or browser local storage)
+- [ ] p9 Add pattern editor (create/save custom patterns in-game) (already exists)
+- [ ] p2 Add sound effects for actions (placement, firing, etc)
+- [ ] p9 Add visual effects for glider firing and collisions (nice to have but not enough time)
+- [ ] p4 Add tutorial or help overlay for new players
+
+### TODO UI/UX
+- [ ] p7 Improve pattern selection UI (search, filter, favorites)
+- [ ] p8 Add tooltips for buttons and patterns
+- [ ] p9 Add keyboard navigation for all menus
+- [ ] p9 Add accessibility options (colorblind mode, font scaling)
+- [ ] p8 Improve settings menu (audio, controls, gameplay tweaks)
+
+### TODO Code Quality & Architecture
+- [ ] p7 Add unit and integration tests for core logic (pattern rotation, region control, etc)
+- [ ] p8 Refactor pattern rotation logic for clarity and extensibility
+- [ ] p9 Document all public functions and modules
+- [x] Add CI/CD pipeline for automated builds and tests (already exists)
+- [x] Add code linting and formatting checks
+
+### TODO Web & Platform
+- [ ] p9 Add mobile/touch support (drag, pinch, tap)
+- [ ] p8 Optimize for WebAssembly (performance, asset loading)
+- [ ] p9 Add PWA support (installable web app)
+- [ ] p7 Add save/load for game state (local storage, cloud)
+
+### TODO Content
+- [ ] p7 Add more patterns (classic, rare, user-submitted)
+- [ ] p7 Add achievements or unlockables
+- [ ] p5 Add multiple levels or scenarios
+
+---
+resources for ai
+
+# source files
+
+## ai requests
+to ai: Ask if you need any of these in your context
+
+## files
+./brainstorm/index.html
 ./src/asset_tracking.rs
 ./src/audio.rs
 ./src/demo/animation.rs
