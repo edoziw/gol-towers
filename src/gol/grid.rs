@@ -1,10 +1,10 @@
 use super::cell::{Cell, CellState};
-use crate::{AppSystems, PausableSystems, screens::Screen};
+use crate::{AppSystems, PausableSystems, gol::cell::RegionOwner, screens::Screen};
 use bevy::prelude::*;
 use rand::prelude::*;
 
-const GRID_WIDTH: usize = 64;
-const GRID_HEIGHT: usize = 64;
+pub const GRID_WIDTH: usize = 64;
+pub const GRID_HEIGHT: usize = 64;
 pub const CELL_SIZE: f32 = 10.0;
 
 pub fn setup_grid(mut commands: Commands) {
@@ -22,6 +22,15 @@ pub fn setup_grid(mut commands: Commands) {
                 CellState::Alive => Color::BLACK,
                 CellState::Dead => Color::WHITE,
             };
+            let region_default_height = GRID_HEIGHT / 5;
+            // Assign region
+            let region = if y >= GRID_HEIGHT - region_default_height {
+                RegionOwner::Player
+            } else if y < region_default_height {
+                RegionOwner::AI
+            } else {
+                RegionOwner::None
+            };
 
             commands.spawn((
                 StateScoped(Screen::Gameplay),
@@ -35,7 +44,12 @@ pub fn setup_grid(mut commands: Commands) {
                     (y as f32 - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
                     0.0,
                 ),
-                Cell { x, y, state },
+                Cell {
+                    x,
+                    y,
+                    state,
+                    region,
+                },
             ));
         }
     }

@@ -73,11 +73,10 @@ fn drag_end_or_click(
             toggle_cell(&mut cells, end);
         } else {
             // Otherwise, place pattern
-            let Some(pattern) = saved.0.get(&selected.0) else {
-                println!("Pattern '{}' not found in saved patterns.", selected.0);
+            let Some(pattern) = find_pattern(saved.as_ref(), pattern_name) else {
                 return;
             };
-            place_pattern(&mut cells, pattern_name, &pattern.cells, end);
+            place_pattern(&mut cells, pattern, end);
         }
         return;
     }
@@ -110,14 +109,21 @@ fn drag_end_or_click(
     println!("Saved pattern '{name}': {:?}", selected);
 }
 
-fn place_pattern(
+fn find_pattern<'a>(patterns: &'a SavedPatterns, pattern_name: &String) -> Option<&'a Pattern> {
+    let result = patterns.0.get(pattern_name);
+    if result.is_none() {
+        println!("Pattern '{}' not found in saved patterns.", pattern_name);
+    }
+    result
+}
+
+pub fn place_pattern(
     cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>,
-    pattern_name: &String,
-    pattern: &Vec<(i32, i32)>,
+    pattern: &Pattern,
     world_pos: Vec2,
 ) {
-    println!("Placing pattern '{pattern_name}' at {world_pos:?}");
-    for (x, y) in pattern {
+    println!("Placing pattern '{}' at {world_pos:?}", pattern.name);
+    for (x, y) in pattern.cells.iter() {
         let cell_pos = world_pos + Vec2::new(*x as f32 * CELL_SIZE, *y as f32 * CELL_SIZE);
         toggle_cell(cells, cell_pos);
     }
