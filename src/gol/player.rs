@@ -1,31 +1,29 @@
 use crate::{
     AppSystems, PausableSystems,
     gol::{
-        cell::{Cell, CellState},
-        grid::{GRID_HEIGHT, GRID_WIDTH, grid_to_world},
+        cell::Cell,
+        grid::Region,
         interaction::{find_pattern, place_pattern},
-        pattern::{Dir, SavedPatterns},
+        pattern::{Dir, Pattern, SavedPatterns},
     },
     screens::Screen,
 };
 use bevy::prelude::*;
 use rand::prelude::*;
 
-const REGION_DEFAULT_HEIGHT: usize = GRID_HEIGHT / 5;
+pub fn populate_player_region(
+    mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
+    saved: Res<SavedPatterns>,
+) {
+    let Some(pattern_unrotated) = find_pattern(saved.as_ref(), &"2x2".to_string()) else {
+        return;
+    };
 
-pub fn populate_player_region(mut cells: Query<&mut Cell>) {
-    let mut rng = rand::thread_rng();
+    let player_region: Region = Region::from(Dir::S, None);
+    let dirs = vec![Dir::None];
 
     for _ in 0..5 {
-        let x = rng.gen_range(0..(GRID_WIDTH - 1));
-        let y = rng.gen_range((GRID_HEIGHT - REGION_DEFAULT_HEIGHT)..(GRID_HEIGHT - 1));
-        for dx in 0..2 {
-            for dy in 0..2 {
-                if let Some(mut cell) = cells.iter_mut().find(|c| c.x == x + dx && c.y == y + dy) {
-                    cell.state = CellState::Alive;
-                }
-            }
-        }
+        spawn_pattern_at_random_in_region(&mut cells, &pattern_unrotated, &player_region, &dirs);
     }
 }
 
@@ -40,30 +38,38 @@ pub fn ai_spawn_glider_timer(
     saved: Res<SavedPatterns>,
 ) {
     timer.0.tick(time.delta());
-    if timer.0.just_finished() {
-        // Pick random position in the AI region (top 1/5th of the grid)
-        // and ensure the pattern fits on the grid.
-        let mut rng = rand::thread_rng();
-
-        if let Some(pattern) = find_pattern(saved.as_ref(), &"glider".to_string()) {
-            // Pick SE or SW heading each spawn
-            let dir = if rng.gen_bool(0.5) { Dir::SE } else { Dir::SW };
-            let mut rotated = pattern.clone();
-            rotated.change_heading(dir);
-
-            // Calculate pattern dimensions for boundary checks
-            let (pat_w, pat_h) = pattern.dimensions();
-            let x_max = GRID_WIDTH.saturating_sub(pat_w);
-            let y_min = GRID_HEIGHT - REGION_DEFAULT_HEIGHT;
-            let y_max = GRID_HEIGHT.saturating_sub(pat_h);
-
-            let x = rng.gen_range(0..=x_max);
-            let y = rng.gen_range(y_min..=y_max);
-
-            let world_pos = grid_to_world(x, y);
-            place_pattern(&mut cells, &rotated, world_pos);
-        }
+    if !timer.0.just_finished() {
+        return;
     }
+    let Some(pattern_unrotated) = find_pattern(saved.as_ref(), &"glider".to_string()) else {
+        return;
+    };
+
+    let ai_region: Region = Region::from(Dir::N, None);
+    let dirs = vec![Dir::SE, Dir::SW];
+
+    spawn_pattern_at_random_in_region(&mut cells, &pattern_unrotated, &ai_region, &dirs);
+}
+
+fn spawn_pattern_at_random_in_region(
+    cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>,
+    pattern_unrotated: &Pattern,
+    region: &Region,
+    dirs: &Vec<Dir>,
+) {
+    let dir = match dirs.choose(&mut rand::thread_rng()) {
+        Some(dir) => dir.clone(),
+        None => Dir::E, // No directions available
+    };
+    let mut pattern = pattern_unrotated.clone();
+    pattern.change_heading(dir);
+
+    let world_pos = pattern
+        .to_region_that_accepts_my_cells(region)
+        .to_world()
+        .to_random_pos();
+
+    place_pattern(cells, &pattern, world_pos);
 }
 
 pub(super) fn plugin(app: &mut App) {

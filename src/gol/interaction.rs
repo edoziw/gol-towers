@@ -85,7 +85,7 @@ fn drag_end_or_click(
     let max = start_pos.max(end);
 
     let mut selected = vec![];
-    for (_, cell, trans) in &cells {
+    for (_, cell, trans) in cells {
         let world_pos = trans.translation.truncate();
         if world_pos.x >= min.x
             && world_pos.x <= max.x

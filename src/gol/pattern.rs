@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt}; // Assuming this is where Dir is defined
+use std::{collections::HashMap, fmt};
+
+use crate::gol::grid::Region;
 
 #[derive(Resource)]
 pub struct SavedPatterns(pub HashMap<String, Pattern>);
@@ -97,10 +99,19 @@ impl Pattern {
     /// The pattern's cells are guaranteed to have non-negative
     /// coordinates, so the dimensions are the maximum x and y values
     /// plus one.
-    pub fn dimensions(&self) -> (usize, usize) {
+    fn dimensions(&self) -> (usize, usize) {
         let max_x = self.cells.iter().map(|(x, _)| *x).max().unwrap_or(0);
         let max_y = self.cells.iter().map(|(_, y)| *y).max().unwrap_or(0);
         ((max_x + 1) as usize, (max_y + 1) as usize)
+    }
+    pub fn to_region_that_accepts_my_cells(&self, given: &Region) -> Region {
+        let (w, h) = self.dimensions();
+        Region::new(
+            given.bounds.min.x,
+            given.bounds.min.y,
+            given.bounds.max.x - w as f32,
+            given.bounds.max.y - h as f32,
+        )
     }
 }
 

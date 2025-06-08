@@ -1,5 +1,9 @@
 use super::cell::{Cell, CellState};
-use crate::{AppSystems, PausableSystems, gol::cell::RegionOwner, screens::Screen};
+use crate::{
+    AppSystems, PausableSystems,
+    gol::{cell::RegionOwner, pattern::Dir},
+    screens::Screen,
+};
 use bevy::prelude::*;
 use rand::prelude::*;
 
@@ -7,6 +11,10 @@ pub const GRID_WIDTH: usize = 64;
 pub const GRID_HEIGHT: usize = 64;
 pub const CELL_SIZE: f32 = 10.0;
 
+const REGION_DEFAULT_HEIGHT: usize = GRID_HEIGHT / 5;
+const fn region_default_height() -> usize {
+    REGION_DEFAULT_HEIGHT
+}
 /// Convert grid coordinates to world coordinates using the same
 /// transformation that [`setup_grid`] applies when spawning cells.
 pub fn grid_to_world(x: usize, y: usize) -> Vec2 {
@@ -14,6 +22,61 @@ pub fn grid_to_world(x: usize, y: usize) -> Vec2 {
         (x as f32 - GRID_WIDTH as f32 / 2.0) * CELL_SIZE,
         (y as f32 - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
     )
+}
+
+pub struct Region {
+    pub bounds: Rect,
+}
+pub struct WorldRegion {
+    pub bounds: Rect,
+}
+impl Region {
+    pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
+        Self {
+            bounds: Rect::new(x, y, width, height),
+        }
+    }
+    pub fn from(dir: Dir, range_opt: Option<usize>) -> Self {
+        let range = range_opt.unwrap_or(REGION_DEFAULT_HEIGHT);
+        let mut bounds = Rect::new(0.0, 0.0, GRID_WIDTH as f32, GRID_HEIGHT as f32); // all
+        match dir {
+            Dir::N => {
+                bounds.max.y = range as f32;
+            }
+            Dir::S => {
+                bounds.min.y = GRID_HEIGHT as f32 - range as f32;
+            }
+            Dir::E => {
+                bounds.min.x = GRID_WIDTH as f32 - range as f32;
+            }
+            Dir::W => {
+                bounds.max.x = range as f32;
+            }
+            _ => {}
+        };
+        Self { bounds: bounds }
+    }
+    pub fn to_world(&self) -> WorldRegion {
+        WorldRegion::new(
+            self.bounds.min.x * CELL_SIZE,
+            self.bounds.min.y * CELL_SIZE,
+            self.bounds.width() * CELL_SIZE,
+            self.bounds.height() * CELL_SIZE,
+        )
+    }
+}
+
+impl WorldRegion {
+    pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
+        Self {
+            bounds: Rect::new(x, y, width, height),
+        }
+    }
+    pub fn to_random_pos(&self) -> Vec2 {
+        let x = rand::thread_rng().gen_range(self.bounds.min.x..self.bounds.max.x);
+        let y = rand::thread_rng().gen_range(self.bounds.min.y..self.bounds.max.y);
+        Vec2::new(x, y)
+    }
 }
 
 pub fn setup_grid(mut commands: Commands) {
