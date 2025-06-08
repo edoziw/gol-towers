@@ -160,7 +160,7 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
     }
 
     for (mut sprite, mut cell) in query.iter_mut() {
-        let mut alive_neighbors = 0;
+        let mut alive_neighbors = Vec::new();
         for dy in -1i32..=1 {
             for dx in -1i32..=1 {
                 if dx == 0 && dy == 0 {
@@ -172,25 +172,28 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
                     && ny >= 0
                     && nx < GRID_WIDTH as i32
                     && ny < GRID_HEIGHT as i32
-                    && grid[ny as usize][nx as usize] == CellState::Alive
+                    && grid[ny as usize][nx as usize].is_alive()
                 {
-                    alive_neighbors += 1;
+                    alive_neighbors.append(grid[ny as usize][nx as usize]);
                 }
             }
         }
 
-        let next_state = match (cell.state, alive_neighbors) {
-            (CellState::Alive, 2..=3) => CellState::Alive,
+        let (next_state, next_kind) = match (cell.state, alive_neighbors) {
+            (CellState::Alive, 2..=3) => (
+                CellState::Alive,
+                kind_from(cell.kind, alive_neighbors_kinds),
+            ),
             (CellState::Dead, 3) => CellState::Alive,
             _ => CellState::Dead,
         };
 
         if next_state != cell.state {
-            cell.state = next_state;
             sprite.color = match next_state {
                 CellState::Alive => Color::BLACK,
                 CellState::Dead => Color::WHITE,
             };
+            cell.state = next_state;
         }
     }
 }

@@ -4,8 +4,22 @@ use rand::prelude::*;
 
 #[derive(Component, Clone, Copy, PartialEq)]
 pub enum CellState {
-    Alive,
+    Alive(CellType),
     Dead,
+}
+impl CellState {
+    pub fn is_alive(&self) -> bool {
+        matches!(self, CellState::Alive(_))
+    }
+    pub fn is_dead(&self) -> bool {
+        matches!(self, CellState::Dead)
+    }
+    pub fn kind(&self) -> CellType {
+        match self {
+            CellState::Alive(kind) => *kind,
+            CellState::Dead => CellType::Empty,
+        }
+    }
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
@@ -15,6 +29,7 @@ pub enum RegionOwner {
     AI,
 }
 
+#[derive(Component, Clone, Copy, PartialEq)]
 pub enum CellType {
     Tree,
     Water,
