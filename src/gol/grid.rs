@@ -2,7 +2,7 @@ use super::cell::{Cell, CellState};
 use crate::{
     AppSystems, PausableSystems,
     gol::{
-        cell::{CellType, RegionOwner},
+        cell::{CellType, Outcome, RegionOwner},
         pattern::Dir,
     },
     screens::Screen,
@@ -106,13 +106,13 @@ pub fn setup_grid(mut commands: Commands) {
 
     for y in 0..GRID_HEIGHT {
         for x in 0..GRID_WIDTH {
-            let (state, kind) = match INITIAL_CELL_STATE {
-                InitialCellState::Dead => (CellState::Dead, CellType::Empty),
+            let state = match INITIAL_CELL_STATE {
+                InitialCellState::Dead => CellState::Dead,
                 InitialCellState::Ramdom => {
                     if rng.gen_bool(0.2) {
-                        (CellState::Alive, CellType::Fire)
+                        CellState::default_alive()
                     } else {
-                        (CellState::Dead, CellType::Empty)
+                        CellState::Dead
                     }
                 }
             };
@@ -130,7 +130,7 @@ pub fn setup_grid(mut commands: Commands) {
             commands.spawn((
                 StateScoped(Screen::Gameplay),
                 Sprite {
-                    color: kind.color(),
+                    color: state.color(),
                     custom_size: Some(Vec2::splat(CELL_SIZE)),
                     ..Default::default()
                 },
@@ -144,7 +144,6 @@ pub fn setup_grid(mut commands: Commands) {
                     y,
                     state,
                     region,
-                    kind,
                 },
             ));
         }
@@ -152,7 +151,7 @@ pub fn setup_grid(mut commands: Commands) {
 }
 
 fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
-    let mut grid = vec![vec![CellState::Dead; GRID_WIDTH]; GRID_HEIGHT];
+    let mut grid = vec![vec![CellState::DeadPlain; GRID_WIDTH]; GRID_HEIGHT];
 
     // Copy current state
     for cell in query.iter() {
@@ -160,7 +159,7 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
     }
 
     for (mut sprite, mut cell) in query.iter_mut() {
-        let mut alive_neighbors = Vec::new();
+        let mut alive_neighbors = Vec::<CellType>::new();
         for dy in -1i32..=1 {
             for dx in -1i32..=1 {
                 if dx == 0 && dy == 0 {
@@ -174,28 +173,58 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
                     && ny < GRID_HEIGHT as i32
                     && grid[ny as usize][nx as usize].is_alive()
                 {
-                    alive_neighbors.append(grid[ny as usize][nx as usize]);
+                    let foo = grid[ny as usize][nx as usize];
+                    alive_neighbors.push(foo.kind());
                 }
             }
         }
 
-        let (next_state, next_kind) = match (cell.state, alive_neighbors) {
-            (CellState::Alive, 2..=3) => (
-                CellState::Alive,
-                kind_from(cell.kind, alive_neighbors_kinds),
-            ),
-            (CellState::Dead, 3) => CellState::Alive,
+        let next_state = match (cell.state.is_alive(), alive_neighbors.len()) {
+            (true, 2..=3) => alive_state_from(cell.state.kind(), &alive_neighbors),
+
+            (false, 3) => alive_state_from(cell.state.kind(), &alive_neighbors),
             _ => CellState::Dead,
         };
 
         if next_state != cell.state {
-            sprite.color = match next_state {
-                CellState::Alive => Color::BLACK,
-                CellState::Dead => Color::WHITE,
-            };
+            sprite.color = next_state.color();
             cell.state = next_state;
         }
     }
+}
+
+fn alive_state_from(current_kind: CellType, alive_neighbors: &Vec<CellType>) -> CellState {
+    if alive_neighbors.is_empty() {
+        return CellState::Alive(current_kind);
+    }
+    let mut rng = rand::thread_rng();
+
+    //top two kinds by frequency in alive_neighbors plus current_kind
+    let top_two_kinds: (CellType, CellType) =
+        alive_neighbors
+            .iter()
+            .fold((current_kind, current_kind), |(a, b), &neighbor| {
+                if neighbor == a || neighbor == b {
+                    (a, b)
+                } else if rng.gen_bool(0.5) {
+                    (neighbor, a)
+                } else {
+                    (a, neighbor)
+                }
+            });
+    let next_kind = match top_two_kinds.0.battle(&top_two_kinds.1) {
+        Outcome::Win => top_two_kinds.0,
+        Outcome::Lose => top_two_kinds.1,
+        Outcome::Draw => {
+            if rng.gen_bool(0.5) {
+                top_two_kinds.0
+            } else {
+                top_two_kinds.1
+            }
+        }
+    };
+
+    CellState::Alive(next_kind)
 }
 
 pub(super) fn plugin(app: &mut App) {

@@ -1,7 +1,7 @@
 use crate::{
     AppSystems, PausableSystems,
     gol::{
-        cell::Cell,
+        cell::{Cell, CellState, CellType},
         grid::Region,
         interaction::{find_pattern, place_pattern},
         pattern::{Dir, Pattern, SavedPatterns},
@@ -22,7 +22,14 @@ pub fn populate_player_region(
     let dirs = vec![Dir::None];
 
     for _ in 0..5 {
-        spawn_pattern_at_random_in_region(&mut cells, &pattern_unrotated, &player_region, &dirs);
+        spawn_pattern_at_random_in_region(
+            &mut cells,
+            &pattern_unrotated,
+            &player_region,
+            &dirs,
+            CellState::Alive(CellType::Tree),
+            CellState::Dead,
+        );
     }
 }
 
@@ -47,7 +54,14 @@ pub fn ai_spawn_glider_timer(
     let ai_region: Region = Region::from(Dir::N, None);
     let dirs = vec![Dir::SE, Dir::SW];
 
-    spawn_pattern_at_random_in_region(&mut cells, &pattern_unrotated, &ai_region, &dirs);
+    spawn_pattern_at_random_in_region(
+        &mut cells,
+        &pattern_unrotated,
+        &ai_region,
+        &dirs,
+        CellState::Alive(CellType::Fire),
+        CellState::Dead,
+    );
 }
 
 fn spawn_pattern_at_random_in_region(
@@ -55,6 +69,8 @@ fn spawn_pattern_at_random_in_region(
     pattern_unrotated: &Pattern,
     region: &Region,
     dirs: &Vec<Dir>,
+    state_alive: CellState,
+    state_dead: CellState,
 ) {
     let dir = match dirs.choose(&mut rand::thread_rng()) {
         Some(dir) => dir.clone(),
@@ -68,7 +84,7 @@ fn spawn_pattern_at_random_in_region(
         .to_world()
         .to_random_pos();
 
-    place_pattern(cells, &pattern, world_pos);
+    place_pattern(cells, &pattern, world_pos, state_alive, state_dead);
 }
 
 pub(super) fn plugin(app: &mut App) {

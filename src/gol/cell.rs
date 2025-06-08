@@ -5,6 +5,8 @@ use rand::prelude::*;
 #[derive(Component, Clone, Copy, PartialEq)]
 pub enum CellState {
     Alive(CellType),
+    AlivePlain,
+    DeadPlain,
     Dead,
 }
 impl CellState {
@@ -17,8 +19,21 @@ impl CellState {
     pub fn kind(&self) -> CellType {
         match self {
             CellState::Alive(kind) => *kind,
+            CellState::AlivePlain => CellType::PlainOn,
+            CellState::DeadPlain => CellType::PlainOff,
             CellState::Dead => CellType::Empty,
         }
+    }
+    pub fn color(&self) -> Color {
+        match self {
+            CellState::Alive(kind) => kind.color(),
+            CellState::AlivePlain => CellType::PlainOn.color(),
+            CellState::DeadPlain => CellType::PlainOff.color(),
+            CellState::Dead => CellType::Empty.color(),
+        }
+    }
+    pub fn default_alive() -> Self {
+        CellState::Alive(CellType::Tree)
     }
 }
 
@@ -34,6 +49,8 @@ pub enum CellType {
     Tree,
     Water,
     Fire,
+    PlainOn,
+    PlainOff,
     Empty,
 }
 pub enum Outcome {
@@ -56,10 +73,12 @@ impl CellType {
     }
     pub fn colors(&self) -> Vec<Color> {
         match self {
-            CellType::Tree => vec![GREEN.into(), MAROON.into()],
+            CellType::Tree => vec![GREEN.into(), OLIVE.into()],
             CellType::Water => vec![BLUE.into(), AQUA.into()],
             CellType::Fire => vec![RED.into(), FUCHSIA.into()],
             CellType::Empty => vec![WHITE.into(), GRAY.into()],
+            CellType::PlainOn => vec![BLACK.into()],
+            CellType::PlainOff => vec![WHITE.into()],
         }
     }
     pub fn color(&self) -> Color {
@@ -74,5 +93,4 @@ pub struct Cell {
     pub y: usize,
     pub state: CellState,
     pub region: RegionOwner,
-    pub kind: CellType,
 }

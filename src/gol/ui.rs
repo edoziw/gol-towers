@@ -283,11 +283,11 @@ fn to_state(pattern: &Vec<(i32, i32)>) -> Vec<Vec<CellState>> {
     let max_x = pattern.iter().map(|(x, _)| *x).max().unwrap_or(0);
     let max_y = pattern.iter().map(|(_, y)| *y).max().unwrap_or(0);
 
-    let mut grid = vec![vec![CellState::Dead; (max_x + 1) as usize]; (max_y + 1) as usize];
+    let mut grid = vec![vec![CellState::DeadPlain; (max_x + 1) as usize]; (max_y + 1) as usize];
 
     for &(x, y) in pattern {
         if x >= 0 && y >= 0 {
-            grid[y as usize][x as usize] = CellState::Alive;
+            grid[y as usize][x as usize] = CellState::AlivePlain;
         }
     }
 
@@ -309,10 +309,7 @@ fn pattern_preview(
     let mut children = Vec::new();
     for (y, row) in pattern.iter().enumerate() {
         for (x, state) in row.iter().enumerate() {
-            let color = match state {
-                CellState::Alive => Color::BLACK,
-                CellState::Dead => Color::NONE,
-            };
+            let color = state.color();
             children.push((
                 Node {
                     width: Val::Px(cell_size),

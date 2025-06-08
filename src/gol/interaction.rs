@@ -3,7 +3,7 @@ use super::{
     grid::CELL_SIZE,
     pattern::{SavedPatterns, SelectedPattern},
 };
-use crate::gol::{pattern::Pattern, patterns_io::load_patterns};
+use crate::gol::{cell::CellType, pattern::Pattern, patterns_io::load_patterns};
 use crate::screens::Screen;
 use bevy::prelude::*;
 
@@ -70,13 +70,24 @@ fn drag_end_or_click(
     if duration < 1.0 && start_pos.distance(end) < CELL_SIZE {
         if selected.0 == "1x1" {
             // If the selected pattern is "1x1", toggle the cell at the clicked position
-            toggle_cell(&mut cells, end);
+            toggle_cell(
+                &mut cells,
+                end,
+                CellState::Alive(CellType::Tree),
+                CellState::Dead,
+            );
         } else {
             // Otherwise, place pattern
             let Some(pattern) = find_pattern(saved.as_ref(), pattern_name) else {
                 return;
             };
-            place_pattern(&mut cells, pattern, end);
+            place_pattern(
+                &mut cells,
+                pattern,
+                end,
+                CellState::Alive(CellType::Tree),
+                CellState::Dead,
+            );
         }
         return;
     }
@@ -91,7 +102,7 @@ fn drag_end_or_click(
             && world_pos.x <= max.x
             && world_pos.y >= min.y
             && world_pos.y <= max.y
-            && cell.state == CellState::Alive
+            && cell.state.is_alive()
         {
             let rel_x = (world_pos.x - min.x).round() as i32 / CELL_SIZE as i32;
             let rel_y = (world_pos.y - min.y).round() as i32 / CELL_SIZE as i32;
@@ -121,11 +132,13 @@ pub fn place_pattern(
     cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>,
     pattern: &Pattern,
     world_pos: Vec2,
+    state_alive: CellState,
+    state_dead: CellState,
 ) {
     info!("Placing pattern '{}' at {world_pos:?}", pattern.name);
     for (x, y) in pattern.cells.iter() {
         let cell_pos = world_pos + Vec2::new(*x as f32 * CELL_SIZE, *y as f32 * CELL_SIZE);
-        toggle_cell(cells, cell_pos);
+        toggle_cell(cells, cell_pos, state_alive, state_dead);
     }
 }
 
@@ -150,10 +163,20 @@ fn click_to_toggle_cell(
     let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) else {
         return;
     };
-    toggle_cell(&mut cells, world_pos);
+    toggle_cell(
+        &mut cells,
+        world_pos,
+        CellState::Alive(CellType::Tree),
+        CellState::Dead,
+    );
 }
 
-fn toggle_cell(cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>, world_pos: Vec2) {
+fn toggle_cell(
+    cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>,
+    world_pos: Vec2,
+    state_alive: CellState,
+    state_dead: CellState,
+) {
     for (mut sprite, mut cell, transform) in cells.iter_mut() {
         let cell_pos = transform.translation.truncate();
         let half_size = CELL_SIZE / 2.0;
@@ -161,16 +184,13 @@ fn toggle_cell(cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>, world_po
         let in_y = (world_pos.y - cell_pos.y).abs() < half_size;
 
         if in_x && in_y {
-            cell.state = if cell.state == CellState::Alive {
-                CellState::Dead
+            cell.state = if cell.state.is_alive() {
+                state_dead
             } else {
-                CellState::Alive
+                state_alive
             };
 
-            sprite.color = match cell.state {
-                CellState::Alive => Color::BLACK,
-                CellState::Dead => Color::WHITE,
-            };
+            sprite.color = cell.state.color();
             break;
         }
     }
