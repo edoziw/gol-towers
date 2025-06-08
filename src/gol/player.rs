@@ -2,7 +2,7 @@ use crate::{
     AppSystems, PausableSystems,
     gol::{
         cell::{Cell, CellState},
-        grid::{GRID_HEIGHT, GRID_WIDTH},
+        grid::{GRID_HEIGHT, GRID_WIDTH, grid_to_world},
         interaction::{find_pattern, place_pattern},
         pattern::{Dir, SavedPatterns},
     },
@@ -53,7 +53,8 @@ pub fn ai_spawn_glider_timer(
         if let Some(pattern) = find_pattern(saved.as_ref(), &"glider".to_string()) {
             let mut rotated = pattern.clone();
             rotated.change_heading(dir);
-            place_pattern(&mut cells, &rotated, Vec2::new(x as f32, y as f32));
+            let world_pos = grid_to_world(x, y);
+            place_pattern(&mut cells, &pattern, world_pos);
             // You will need a function to place a pattern at grid coords (x, y)
             // e.g., place_pattern_at_grid(&mut cells, &pattern.cells, x, y);
         }
