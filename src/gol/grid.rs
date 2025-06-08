@@ -7,6 +7,15 @@ pub const GRID_WIDTH: usize = 64;
 pub const GRID_HEIGHT: usize = 64;
 pub const CELL_SIZE: f32 = 10.0;
 
+/// Convert grid coordinates to world coordinates using the same
+/// transformation that [`setup_grid`] applies when spawning cells.
+pub fn grid_to_world(x: usize, y: usize) -> Vec2 {
+    Vec2::new(
+        (x as f32 - GRID_WIDTH as f32 / 2.0) * CELL_SIZE,
+        (y as f32 - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
+    )
+}
+
 pub fn setup_grid(mut commands: Commands) {
     let mut rng = rand::thread_rng();
 
