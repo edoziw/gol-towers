@@ -40,16 +40,18 @@ impl Region {
         let range = range_opt.unwrap_or(REGION_DEFAULT_HEIGHT);
         let mut bounds = Rect::new(0.0, 0.0, GRID_WIDTH as f32, GRID_HEIGHT as f32); // all
         match dir {
-            Dir::N => {
+            Dir::S => {
                 bounds.max.y = range as f32;
             }
-            Dir::S => {
+            Dir::N => {
                 bounds.min.y = GRID_HEIGHT as f32 - range as f32;
             }
             Dir::E => {
+                //to test
                 bounds.min.x = GRID_WIDTH as f32 - range as f32;
             }
             Dir::W => {
+                //to test
                 bounds.max.x = range as f32;
             }
             _ => {}
@@ -61,12 +63,18 @@ impl Region {
             (self.bounds.min.x - GRID_WIDTH as f32 / 2.0) * CELL_SIZE,
             (self.bounds.min.y - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
         );
-        WorldRegion::new(
-            world_min.x,
-            world_min.y,
-            world_min.x + self.bounds.width() * CELL_SIZE,
-            world_min.y + self.bounds.height() * CELL_SIZE,
-        )
+        let world_max = Vec2::new(
+            (self.bounds.max.x - GRID_WIDTH as f32 / 2.0) * CELL_SIZE,
+            (self.bounds.max.y - GRID_HEIGHT as f32 / 2.0) * CELL_SIZE,
+        );
+        let result = WorldRegion {
+            bounds: Rect {
+                min: world_min,
+                max: world_max,
+            },
+        };
+        info!("Region to world: {:?} -> {:?}", self.bounds, result.bounds);
+        result
     }
 }
 
