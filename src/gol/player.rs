@@ -54,7 +54,7 @@ pub fn ai_spawn_glider_timer(
             let mut rotated = pattern.clone();
             rotated.change_heading(dir);
             let world_pos = grid_to_world(x, y);
-            place_pattern(&mut cells, &pattern, world_pos);
+            place_pattern(&mut cells, &rotated, world_pos);
             // You will need a function to place a pattern at grid coords (x, y)
             // e.g., place_pattern_at_grid(&mut cells, &pattern.cells, x, y);
         }
