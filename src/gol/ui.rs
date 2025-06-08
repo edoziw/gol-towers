@@ -295,7 +295,7 @@ fn to_state(pattern: &Vec<(i32, i32)>) -> Vec<Vec<CellState>> {
 }
 
 fn pattern_preview(
-    pattern: &Vec<Vec<CellState>>,
+    pattern: &[Vec<CellState>],
 ) -> (
     Node,
     BackgroundColor,
@@ -304,7 +304,7 @@ fn pattern_preview(
     // Adjust these for preview size
     let cell_size = 8.0;
     let rows = pattern.len();
-    let cols = pattern.get(0).map_or(0, |row| row.len());
+    let cols = pattern.first().map_or(0, |row| row.len());
 
     let mut children = Vec::new();
     for (y, row) in pattern.iter().enumerate() {

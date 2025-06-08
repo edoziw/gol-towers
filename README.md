@@ -12,28 +12,30 @@ In the next 20 hours
 - [ ] p0 Make it a game :)
 - [ ] p2 Base on brainstorm/index.html (javascript poc)
 #### m1 this first
-- [ ] p1 Add region entities to track population of grid sections
-- [ ] p1 Add CpuAiPlayer component and region that fires gliders
-    - [ ] p1 Fire from random positions in the top 1/5th region
-    - [ ] p1 Support SE, SW headings
-- [ ] p1 Improve player entity
-    - [ ] p1 Define player region
-    - [ ] p2 Track population under player control
-    - [ ] p1 Add tower position entities
-    - [ ] p1 Mark current selected tower (resource or property?)
-    - [ ] p1 Action to fire gliders from selected tower
-    - [ ] p2 Action to switch towers via keyboard
+- [x] p1 Add region entities
+- [ ] p2 track population of regions
 - [ ] p2 Add win/loss/game-over conditions
 - [ ] p3 Add scoring system (population, territory, towers controlled, etc)
-- [ ] p3 Add a "share pattern" feature (copy/paste pattern code or link). (this will 
+- [ ] p3 Add a "share pattern" feature (copy/paste pattern code or link). (this will increase engagement)
+- [x] p1 Add CpuAiPlayer component and region that fires gliders
+    - [x] p1 Fire from random positions in the top 1/5th region (fire)
+    - [x] p1 Support SE, SW headings
+- [ ] p1 Improve player entity
+    - [x] p1 click to use current pattern (watter), and wasd to control its direction N,S,E,W,NE,SE,SW,NW
+    - [x] p1 Define player region
+    - [x] p1 spawn (tree) for player to protect
+    - [x] p2 Track population under player control
+- [ ] p3 Add tower position entities
+    - [ ] p3 Mark current selected tower (resource or property?)
+    - [ ] p3 Action to fire gliders from selected tower (and disable click to spawn)
+    - [ ] p3 Action to switch towers via keyboard
 #### m2 then this
-- [ ] p3 add the rock paper scisors logic and theme from the index.html poc
+- [x] p3 add the rock paper scisors logic and theme from the index.html poc
 - [ ] p4 Add CpuAiPlayer defense region
 - [ ] p3 Add a "How to Play" modal or page (rules, controls, RPS logic).
 - [ ] p3 Add a "sandbox" mode (no CPU, just experiment).
 - [ ] p9 Add analytics or basic telemetry (optional, for playtesting).
 - [ ] p5 Add a "random pattern" button for fun experimentation.
-increase engagement)
 - [ ] p5 Add a "challenge" mode (preset scenarios with goals).
 - [ ] p7 Add a "spectator" mode (watch CPU vs CPU).
 
@@ -45,10 +47,8 @@ increase engagement)
 resources for ai
 
 # source files
-
-## ai requests
-to ai: Ask if you need any of these in your context
-
+## to ai:
+Ask if you need any of these files in your context
 ## files
 ./brainstorm/index.html
 ./src/asset_tracking.rs
@@ -88,8 +88,8 @@ to ai: Ask if you need any of these in your context
 
 ---
 # ai controlled below here
-
 ---
+
 # Gol Towers – AI controlled TODO List updated
 
 ## AI-Generated Suggestions

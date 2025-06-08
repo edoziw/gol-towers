@@ -59,7 +59,7 @@ impl Region {
             }
             _ => {}
         };
-        Self { bounds: bounds }
+        Self { bounds }
     }
     pub fn to_world(&self) -> WorldRegion {
         let world_min = Vec2::new(
@@ -173,8 +173,7 @@ fn game_of_life_step(mut query: Query<(&mut Sprite, &mut Cell)>) {
                     && ny < GRID_HEIGHT as i32
                     && grid[ny as usize][nx as usize].is_alive()
                 {
-                    let foo = grid[ny as usize][nx as usize];
-                    alive_neighbors.push(foo.kind());
+                    alive_neighbors.push(grid[ny as usize][nx as usize].kind());
                 }
             }
         }
@@ -212,7 +211,7 @@ fn most_frequent_kind(alive_neighbors: &Vec<CellType>) -> CellType {
 
 fn alive_state_from(
     current_kind_or_most_alive: CellType,
-    alive_neighbors: &Vec<CellType>,
+    alive_neighbors: &[CellType],
 ) -> CellState {
     if alive_neighbors.is_empty() {
         return CellState::Alive(current_kind_or_most_alive);

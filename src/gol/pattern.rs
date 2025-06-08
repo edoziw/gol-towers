@@ -39,7 +39,7 @@ impl Pattern {
                 cells,
                 deletable: false,
                 is_temp: true, // Readonly patterns are not saved
-                dir: dir,
+                dir,
             },
         )
     }
@@ -71,13 +71,10 @@ impl Pattern {
             _ => {}
         }
         match self.dir {
-            Dir::None | Dir::Unknown => {
-                return;
-            }
+            Dir::None | Dir::Unknown => {}
             Dir::N | Dir::E | Dir::S | Dir::W | Dir::NE | Dir::NW | Dir::SE | Dir::SW => {
                 if new_dir == self.dir {
                     info!("Pattern '{}' is already facing {:?}", self.name, self.dir);
-                    return;
                 } else {
                     info!(
                         "Pattern '{}' changing direction from {:?} to {:?}",
@@ -211,10 +208,7 @@ fn rotate_from_a_to_b(cells: Vec<(i32, i32)>, from: &Dir, to: &Dir) -> Vec<(i32,
 fn translate_to_positive_coordinates(cells: &[(i32, i32)]) -> Vec<(i32, i32)> {
     let min_x = cells.iter().map(|(x, _)| *x).min().unwrap_or(0);
     let min_y = cells.iter().map(|(_, y)| *y).min().unwrap_or(0);
-    cells
-        .into_iter()
-        .map(|(x, y)| (x - min_x, y - min_y))
-        .collect()
+    cells.iter().map(|(x, y)| (x - min_x, y - min_y)).collect()
 }
 fn rot_2d_0(cells: &[(i32, i32)]) -> Vec<(i32, i32)> {
     cells.to_vec()
@@ -262,17 +256,11 @@ impl From<Vec2> for Dir {
             }
         }
         if vec.x > 0.0 {
-            if vec.y < 0.0 {
-                return Dir::SE;
-            } else {
-                return Dir::NE;
-            }
+            if vec.y < 0.0 { Dir::SE } else { Dir::NE }
+        } else if vec.y < 0.0 {
+            Dir::SW
         } else {
-            if vec.y < 0.0 {
-                return Dir::SW;
-            } else {
-                return Dir::NW;
-            }
+            Dir::NW
         }
     }
 }

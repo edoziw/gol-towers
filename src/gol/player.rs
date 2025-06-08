@@ -14,7 +14,7 @@ pub fn populate_player_region(
     mut cells: Query<(&mut Sprite, &mut Cell, &Transform)>,
     saved: Res<SavedPatterns>,
 ) {
-    let Some(pattern_unrotated) = find_pattern(saved.as_ref(), &"2x2".to_string()) else {
+    let Some(pattern_unrotated) = find_pattern(saved.as_ref(), "2x2") else {
         return;
     };
 
@@ -24,7 +24,7 @@ pub fn populate_player_region(
     for _ in 0..5 {
         spawn_pattern_at_random_in_region(
             &mut cells,
-            &pattern_unrotated,
+            pattern_unrotated,
             &player_region,
             &dirs,
             CellState::Alive(CellType::Tree),
@@ -79,9 +79,9 @@ pub fn ai_spawn_pattern_on_timer(
 
     spawn_pattern_at_random_in_region(
         &mut cells,
-        &pattern_unrotated,
+        pattern_unrotated,
         &ai_region,
-        &pattern_config.dirs.to_vec(),
+        pattern_config.dirs,
         CellState::Alive(CellType::Fire),
         CellState::Dead,
     );
@@ -91,7 +91,7 @@ fn spawn_pattern_at_random_in_region(
     cells: &mut Query<(&mut Sprite, &mut Cell, &Transform)>,
     pattern_unrotated: &Pattern,
     region: &Region,
-    dirs: &Vec<Dir>,
+    dirs: &[Dir],
     state_alive: CellState,
     state_dead: CellState,
 ) {

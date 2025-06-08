@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use serde_json::from_str;
 use web_sys::window;
 
-const PATTERNS_KEY: &'static str = "gol-patterns";
+const PATTERNS_KEY: &str = "gol-patterns";
 
 pub fn load_patterns_from_local_storage() -> std::vec::Vec<Pattern> {
     if let Some(storage) = window().and_then(|w| w.local_storage().ok().flatten()) {
