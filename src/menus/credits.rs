@@ -28,21 +28,41 @@ fn spawn_credits_menu(mut commands: Commands) {
             created_by(),
             widget::header("Assets"),
             assets(),
+            widget::header("Thanks to"),
+            thanks_to(),
             widget::button("Back", go_back_on_click),
         ],
     ));
 }
 
 fn created_by() -> impl Bundle {
-    grid(vec![
-        ["kipcringe", "designer, programmer, and artist"],
+    grid(vec![["kipcringe", "designer, programmer, and artist"]])
+}
+
+fn thanks_to() -> impl Bundle {
+    grid_small(vec![
         ["copilot", "My digital assistant"],
+        [
+            "John Horton Conway",
+            "Created the Game of Life. https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life",
+        ],
+        [
+            "rust",
+            "The programming language used to create this game. https://www.rust-lang.org/",
+        ],
+        [
+            "Bevy",
+            "The game engine used to create this game. https://bevy.org/",
+        ],
+        [
+            "rust crates: search https://crates.io/ for more info",
+            r#"log 0.4, tracing 0.1, serde 1.0.219, serde_json 1.0.140, web-sys 0.3.77, bevy_enhanced_input 0.12.0"#,
+        ],
     ])
 }
 
 fn assets() -> impl Bundle {
     grid(vec![
-        ["Ducky sprite", "CC0 by Caz Creates Games"],
         ["Button SFX", "CC0 by Jaszunio15"],
         ["Music", "CC BY 3.0 by Kevin MacLeod"],
         [
@@ -66,6 +86,34 @@ fn grid(content: Vec<[&'static str; 2]>) -> impl Bundle {
             |(i, text)| {
                 (
                     widget::label(text),
+                    Node {
+                        justify_self: if i % 2 == 0 {
+                            JustifySelf::End
+                        } else {
+                            JustifySelf::Start
+                        },
+                        ..default()
+                    },
+                )
+            },
+        ))),
+    )
+}
+
+fn grid_small(content: Vec<[&'static str; 2]>) -> impl Bundle {
+    (
+        Name::new("Grid"),
+        Node {
+            display: Display::Grid,
+            row_gap: Px(10.0),
+            column_gap: Px(30.0),
+            grid_template_columns: RepeatedGridTrack::px(2, 400.0),
+            ..default()
+        },
+        Children::spawn(SpawnIter(content.into_iter().flatten().enumerate().map(
+            |(i, text)| {
+                (
+                    widget::label_small(text),
                     Node {
                         justify_self: if i % 2 == 0 {
                             JustifySelf::End

@@ -92,6 +92,15 @@ pub fn label(text: impl Into<String>) -> impl Bundle {
     )
 }
 
+pub fn label_small(text: impl Into<String>) -> impl Bundle {
+    (
+        Name::new("Label"),
+        Text(text.into()),
+        TextFont::from_font_size(12.0),
+        TextColor(LABEL_TEXT),
+    )
+}
+
 /// A large rounded button with text and an action defined as an [`Observer`].
 pub fn button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
 where

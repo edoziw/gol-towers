@@ -2,15 +2,23 @@
 set -o errexit && set -o pipefail && set -o nounset
 
 web() {
-  clippy && bevy run web
+  lint && bevy run web
 }
 
 win() {
-  clippy && bevy run
+  lint && bevy run
+}
+
+lint() {
+  clippy && bevy_lint
 }
 
 clippy() {
     cargo clippy --locked --workspace --all-targets --profile ci --all-features
+}
+
+bevy_lint() {
+  bevy lint
 }
 
 main() {
@@ -26,7 +34,7 @@ local -r mode="${1:-web}"
 clear
 
 case "${mode}" in
-  web|win|clippy)
+  web|win|clippy|bevy_lint|lint)
     "$mode" "$@"
     ;;
   *)
