@@ -2,11 +2,11 @@
 set -o errexit && set -o pipefail && set -o nounset
 
 web() {
-  bevy run web
+  clippy && bevy run web
 }
 
 win() {
-  bevy run
+  clippy && bevy run
 }
 
 clippy() {

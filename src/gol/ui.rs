@@ -1,6 +1,7 @@
 use super::cell::{Cell, CellState};
 use super::pattern::{SavedPatterns, SelectedPattern};
 use super::state::Playing;
+use crate::gol::cell::CellType;
 use crate::gol::patterns_io::{save_pattern, save_patterns};
 use crate::screens::Screen;
 use crate::theme::widget;
@@ -9,7 +10,7 @@ use bevy::ecs::spawn::SpawnRelatedBundle;
 use bevy::{prelude::*, ui::Val::*};
 
 #[derive(Component)]
-struct GameMenuRoot;
+pub struct GameMenuRoot;
 
 #[derive(Component)]
 struct ClearButton;
@@ -143,8 +144,9 @@ fn build_pattern_buttons_bundle() -> impl Bundle {
     (
         PatternButtons,
         Node {
+            align_items: AlignItems::FlexEnd,
             flex_direction: FlexDirection::Column,
-            row_gap: Px(20.0),
+            row_gap: Px(5.0),
             margin: UiRect {
                 left: Val::Px(16.0),
                 top: Val::Px(16.0),
@@ -176,7 +178,7 @@ fn spawn_pattern_buttons(
     patterns_root.spawn((
         Text::new("Patterns:"),
         TextFont {
-            font_size: 20.0,
+            font_size: 18.0,
             ..default()
         },
         TextColor(Color::BLACK),
@@ -202,7 +204,7 @@ fn spawn_pattern_buttons(
             Name::new(format!("PatternButton:{}", name)),
             BackgroundColor(color),
             Node {
-                flex_direction: FlexDirection::Row,
+                flex_direction: FlexDirection::Column,
                 ..default()
             },
         ));
@@ -210,7 +212,7 @@ fn spawn_pattern_buttons(
             pattern_root.spawn((
                 Text::new(label),
                 TextFont {
-                    font_size: 20.0,
+                    font_size: 10.0,
                     ..default()
                 },
                 TextColor(Color::BLACK),
@@ -235,9 +237,9 @@ fn add_buttons_when_deletable(pattern_root: &mut ChildSpawnerCommands, name: &st
             Name::new(format!("DeletePatternButton:{}", name)),
             BackgroundColor(Color::srgb(0.8, 0.2, 0.2)),
             Node {
-                width: Val::Px(32.0),
-                height: Val::Px(32.0),
-                margin: UiRect::left(Val::Px(8.0)),
+                width: Val::Px(10.0),
+                height: Val::Px(10.0),
+                margin: UiRect::left(Val::Px(4.0)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..default()
@@ -246,7 +248,7 @@ fn add_buttons_when_deletable(pattern_root: &mut ChildSpawnerCommands, name: &st
         .with_child((
             Text::new("X"),
             TextFont {
-                font_size: 16.0,
+                font_size: 8.0,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -259,8 +261,8 @@ fn add_buttons_when_deletable(pattern_root: &mut ChildSpawnerCommands, name: &st
             Name::new(format!("SavePatternButton:{}", name)),
             BackgroundColor(Color::srgb(0.2, 0.8, 0.2)),
             Node {
-                width: Val::Px(32.0),
-                height: Val::Px(32.0),
+                width: Val::Px(10.0),
+                height: Val::Px(10.0),
                 margin: UiRect::left(Val::Px(4.0)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -270,7 +272,7 @@ fn add_buttons_when_deletable(pattern_root: &mut ChildSpawnerCommands, name: &st
         .with_child((
             Text::new("^"),
             TextFont {
-                font_size: 16.0,
+                font_size: 8.0,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -287,7 +289,7 @@ fn to_state(pattern: &Vec<(i32, i32)>) -> Vec<Vec<CellState>> {
 
     for &(x, y) in pattern {
         if x >= 0 && y >= 0 {
-            grid[y as usize][x as usize] = CellState::AlivePlain;
+            grid[y as usize][x as usize] = CellState::Alive(CellType::Water);
         }
     }
 
@@ -368,7 +370,7 @@ fn update_pattern_button_highlights(
                 *bg = BackgroundColor(PATTERN_SELECTED_COLOR);
                 commands.entity(entity).insert(SellectedPatternButton);
             } else {
-                *bg = BackgroundColor(PATTERN_COLOR);
+                *bg = BackgroundColor(Color::NONE);
                 commands.entity(entity).remove::<SellectedPatternButton>();
             }
         }

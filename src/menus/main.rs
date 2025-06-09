@@ -33,8 +33,10 @@ fn enter_loading_or_gameplay_screen(
     _: Trigger<Pointer<Click>>,
     resource_handles: Res<ResourceHandles>,
     mut next_screen: ResMut<NextState<Screen>>,
+    mut next_menu: ResMut<NextState<Menu>>,
 ) {
     if resource_handles.is_all_done() {
+        //next_menu.set(Menu::Main);
         next_screen.set(Screen::Gameplay);
     } else {
         next_screen.set(Screen::Loading);

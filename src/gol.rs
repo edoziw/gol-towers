@@ -1,11 +1,13 @@
 pub mod cell;
 pub mod debug;
+pub mod game_over;
 pub mod grid;
 pub mod input;
 pub mod interaction;
 pub mod pattern;
 pub mod patterns_io;
 pub mod player;
+pub mod score;
 pub mod state;
 pub mod ui;
 
@@ -24,6 +26,8 @@ pub(super) fn plugin(app: &mut App) {
         input::plugin,
         player::plugin,
         debug::plugin,
+        score::plugin,
+        game_over::plugin,
     ))
     .insert_resource(state::Playing(false))
     .add_systems(
