@@ -2,6 +2,7 @@ use crate::{
     AppSystems, PausableSystems,
     gol::{
         cell::{Cell, CellState, CellType},
+        game_over::GameOverState,
         grid::Region,
         interaction::{find_pattern, place_pattern},
         pattern::{Dir, Pattern, SavedPatterns},
@@ -62,6 +63,7 @@ pub fn ai_spawn_pattern_on_timer(
     time: Res<Time>,
     //mut commands: Commands,
     saved: Res<SavedPatterns>,
+    mut game_over: ResMut<GameOverState>,
 ) {
     timer.0.tick(time.delta());
     if !timer.0.just_finished() {
@@ -76,7 +78,7 @@ pub fn ai_spawn_pattern_on_timer(
     };
 
     let ai_region: Region = Region::from(Dir::N, None);
-
+    game_over.ai_moved += 1;
     spawn_pattern_at_random_in_region(
         &mut cells,
         pattern_unrotated,

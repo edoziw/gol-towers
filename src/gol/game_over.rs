@@ -16,18 +16,32 @@ pub struct BestScore(pub i32);
 pub struct GameOverState {
     pub is_over: bool,
     pub message: String,
+    pub ai_moved: u32,
+    pub timer: Timer,
+}
+
+fn start_timer(mut game_over: ResMut<GameOverState>) {
+    game_over.timer = Timer::from_seconds(5.0, TimerMode::Once);
 }
 
 #[derive(Component)]
 struct GameOverUi;
 
-fn check_game_over(
+pub fn check_game_over(
     player_score: Res<PlayerScore>,
     ai_score: Res<AiScore>,
     mut best_score: ResMut<BestScore>,
     mut game_over: ResMut<GameOverState>,
     mut next_screen: ResMut<NextState<Screen>>,
+    time: Res<Time>,
 ) {
+    game_over.timer.tick(time.delta());
+    if !game_over.timer.finished() {
+        return;
+    }
+    if game_over.ai_moved < 5 {
+        return;
+    }
     // Update best score if needed
     if player_score.0 > best_score.0 {
         best_score.0 = player_score.0;
@@ -38,7 +52,7 @@ fn check_game_over(
         game_over.is_over = true;
         game_over.message = "You win!".to_string();
         next_screen.set(Screen::GameOver);
-    } else if player_score.0 < -100 && !game_over.is_over {
+    } else if (player_score.0 < -100 || ai_score.0 - player_score.0 > 200) && !game_over.is_over {
         game_over.is_over = true;
         game_over.message = "You lose.".to_string();
         next_screen.set(Screen::GameOver);
@@ -84,9 +98,11 @@ fn go_back_on_click(
     _: Trigger<Pointer<Click>>,
     mut next_menu: ResMut<NextState<Menu>>,
     mut next_screen: ResMut<NextState<Screen>>,
+    mut game_over: ResMut<GameOverState>,
 ) {
     next_screen.set(Screen::Title);
     next_menu.set(Menu::Main);
+    game_over.is_over = false;
 }
 
 fn despawn_game_over_ui(mut commands: Commands, game_over_ui: Query<Entity, With<GameOverUi>>) {
@@ -115,6 +131,7 @@ pub(super) fn plugin(app: &mut App) {
                 .in_set(AppSystems::Update)
                 .in_set(PausableSystems),
         )
+        .add_systems(OnEnter(Screen::Gameplay), start_timer)
         .add_systems(OnEnter(Screen::GameOver), show_game_over_ui)
         .add_systems(OnExit(Screen::GameOver), despawn_game_over_ui);
 }

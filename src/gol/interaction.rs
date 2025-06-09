@@ -195,7 +195,10 @@ fn toggle_cell(
 
 pub(super) fn plugin(app: &mut App) {
     app //.add_systems(Update, click_to_toggle_cell)
-        .add_systems(Update, (drag_start, drag_end_or_click))
+        .add_systems(
+            Update,
+            (drag_start, drag_end_or_click).run_if(in_state(Screen::Gameplay)),
+        )
         .add_systems(OnEnter(Screen::Splash), load_patterns)
         .insert_resource(DragStart::default())
         .insert_resource(SelectedPattern("1x1".to_string()))

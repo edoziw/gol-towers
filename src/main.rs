@@ -6,7 +6,6 @@
 
 mod asset_tracking;
 mod audio;
-mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
 mod gol;
@@ -59,7 +58,6 @@ impl Plugin for AppPlugin {
             */
             audio::plugin,
             gol::plugin,
-            demo::plugin,
             #[cfg(feature = "dev")]
             dev_tools::plugin,
             menus::plugin,

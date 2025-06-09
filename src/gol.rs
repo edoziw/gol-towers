@@ -14,7 +14,7 @@ pub mod ui;
 use bevy::prelude::*;
 
 use crate::{
-    gol::{grid::setup_grid, player::populate_player_region},
+    gol::{game_over::check_game_over, grid::setup_grid, player::populate_player_region},
     screens::Screen,
 };
 
@@ -32,6 +32,6 @@ pub(super) fn plugin(app: &mut App) {
     .insert_resource(state::Playing(false))
     .add_systems(
         OnEnter(Screen::Gameplay),
-        (setup_grid, populate_player_region).chain(),
+        (setup_grid, populate_player_region, check_game_over).chain(),
     );
 }
